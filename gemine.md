@@ -1,8 +1,8 @@
 # GEMINI.md
 
-แนวปฏิบัติเชิงพฤติกรรมของ AI อันดับ 1 ของโลก (World's #1 AI Blueprint) บนสถาปัตยกรรมแยกฝั่ง (Decoupled/Hybrid Architecture) ระหว่าง Frontend External Hosting (GitHub Pages/Vercel) และ Backend API (Google Apps Script - code.gs) 
+แนวปฏิบัติเชิงพฤติกรรมของ AI อันดับ 1 ของโลก (World's #1 AI Blueprint) บนสถาปัตยกรรมแยกฝั่ง (Hybrid Architecture) โดยใช้ External Frontend (GitHub/Vercel) ร่วมกับ Google Apps Script Backend API, Google Sheets (Database) และ Google Drive (Storage)
 
-> **วิสัยทัศน์:** "ไม่มีปัญหาใดที่แก้ไม่ได้ มีเพียงระบบที่ออกแบบมาไม่ดีพอเท่านั้น" เอกสารนี้เขียนขึ้นเพื่อควบคุมให้ AI ระดับท็อปทำงานได้อย่างไร้ที่ติ รอบคอบ และยั่งยืน
+> **วิสัยทัศน์:** "ควบคุมสถาปัตยกรรมคลาวด์ของ Google และโมเดิร์นเว็บให้ทำงานประสานกันอย่างไร้รอยต่อ ปลอดภัย และมีประสิทธิภาพสูงสุด"
 
 ---
 
@@ -28,36 +28,32 @@
 
 ---
 
-## 5. หลังบ้าน Google Apps Script (code.gs) ในฐานะ REST JSON API
-เนื่องจากระบบเลือกใช้การแยกฝั่ง (Decoupled) ไฟล์ `code.gs` จะไม่ทำหน้าที่ Render หน้าเว็บ (HTML Service) อีกต่อไป แต่จะเปลี่ยนบทบาทเป็น API ทั้งหมด:
-* **JSON Response เท่านั้น:** ทุก Endpoint ใน `doGet(e)` หรือ `doPost(e)` ต้องส่งกลับข้อมูลในรูปแบบ JSON และเปิดสิทธิ์ CORS เสมอ ตัวอย่างโครงสร้าง:
-```javascript
-    function doPost(e) {
-      try {
-        // ประมวลผล Business Logic ตรงนี้...
-        let output = { status: "success", data: result };
-        return ContentService.createTextOutput(JSON.stringify(output))
-                             .setMimeType(ContentService.MimeType.JSON);
-      } catch(err) {
-        let errorOutput = { status: "error", message: err.toString() };
-        return ContentService.createTextOutput(JSON.stringify(errorOutput))
-                             .setMimeType(ContentService.MimeType.JSON);
-      }
-    }
-    ```
-* **Security:** ห้าม Hardcode ข้อมูลความลับ (API Keys, Tokens) ให้เรียกใช้งานผ่าน `PropertiesService.getScriptProperties()` เท่านั้น
+## 5. การควบคุมหลังบ้าน Google Apps Script (code.gs)
+ไฟล์ `code.gs` จะทำหน้าที่เป็นตัวกลาง (Middleware) และ REST API คอยควบคุม Data ชั้นต่างๆ:
+
+* **JSON Response & CORS:** ทุก Endpoint ใน `doGet(e)` หรือ `doPost(e)` ต้องส่งกลับข้อมูลเป็น JSON และเปิดสิทธิ์ CORS เสมอ เพื่อให้หน้าบ้านภายนอกเข้าถึงได้
+* **Google Sheets ในฐานะ Database:**
+    * **Batch Operations เท่านั้น:** ห้ามใช้ `setValue()` หรือ `getValue()` ภายใน Loop (เพราะจะทำให้ระบบทำงานช้าและติด Timeout) ให้ดึงข้อมูลมาประมวลผลใน Array ฝั่งโค้ด แล้วใช้ `setValues()` หรือ `appendRow()` ในครั้งเดียว
+    * **โครงสร้างข้อมูลชัดเจน:** ข้อมูลในแผ่นงานต้องมีการกำหนด Header ที่ชัดเจน และใช้ Object Mapping ในการแปลงแถวของตารางให้เป็น JSON เพื่อส่งต่อให้หน้าบ้านอ่านง่าย
+* **Google Drive ในฐานะ File Storage:**
+    * **การรับส่งไฟล์:** หน้าบ้านจะส่งไฟล์เข้ามาในรูปแบบ Base64 String หรือ Blob, ฝั่ง `code.gs` ต้องทำหน้าที่แปลงกลับ (Decode) และบันทึกลงใน Folder เฉพาะเจาะจง
+    * **การคืนค่าสิทธิ์:** เมื่อเซฟไฟล์ลง Drive สำเร็จ ต้องสั่งเปิดสิทธิ์การเข้าถึงที่เหมาะสม (เช่น View Only สำหรับผู้ที่มีลิงก์) และส่ง URL กลับไปให้หน้าบ้านนำไปใช้งานต่อ
+* **Data and State Security:** ห้าม Hardcode ข้อมูลสำคัญเด็ดขาด! ให้เก็บค่าเหล่านี้ไว้ใน `PropertiesService.getScriptProperties()` เสมอ:
+    * `SPREADSHEET_ID` (ไอดีของฐานข้อมูล Google Sheets)
+    * `FOLDER_ID` (ไอดีของโฟลเดอร์เก็บไฟล์บน Google Drive)
+    * `API_SECRET_KEY` (หากมีระบบตรวจสอบสิทธิ์ความปลอดภัย)
 
 ---
 
 ## 6. โครงสร้างไฟล์หน้าบ้าน (Frontend Folder Structure)
-หน้าบ้านจะถูกโฮสต์บนบริการฟรีภายนอก เช่น **GitHub Pages, Vercel, หรือ Netlify** เพื่อตัดข้อจำกัดของ GAS ออกไป โครงสร้างโฟลเดอร์ต้องถูกจัดกลุ่มตามมาตรฐาน Git-Friendly:
+หน้าบ้านจะถูกโฮสต์บนบริการภายนอก เช่น **GitHub Pages, Vercel, หรือ Netlify** จัดโครงสร้างโฟลเดอร์ตามมาตรฐานสากล:
 ```text
 ├── index.html          # หน้าหลักของแอปพลิเคชัน
 ├── css/
 │   └── style.css       # ไฟล์สไตล์หลักและการตั้งค่า Print CSS
 ├── js/
-│   ├── api.js          # จัดการส่ง fetch() หรือ axios ไปยัง GAS Web App URL
-│   └── app.js          # Logic ควบคุมหน้าต่างใช้งาน (UI Interaction)
+│   ├── api.js          # จัดการส่ง fetch() / ดึงข้อมูล / อัปโหลดไฟล์ไปที่ GAS
+│   └── app.js          # ควบคุม UI Logic และเหตุการณ์บนหน้าเว็บ
 └── assets/             # เก็บรูปภาพหรือไอคอนประกอบเว็บ
 
 7. การรองรับหลายอุปกรณ์ (Cross-Device Responsiveness)
@@ -65,13 +61,13 @@ UI ทั้งหมดต้องรองรับ Mobile-First Approach ห
 ต้องแสดงผลได้สวยงาม ใช้งานง่าย ไม่ล้นหน้าจอ ทั้งบนอุปกรณ์เคลื่อนที่ (Mobile), แท็บเล็ต (iPad), และหน้าจอคอมพิวเตอร์ (PC)
 
 8. มาตรฐาน UI/UX ที่ทันสมัยเสมอ (Modern UI/UX Standards)
-เรียบหรูและสะอาดตา (Modern Clean): เน้นสไตล์ Minimalist ใช้พื้นที่ว่าง (White Space) อย่างเหมาะสม คุมโทนสีและฟอนต์ให้สม่ำเสมอกันทั้งระบบ
+เรียบหรูและสะอาดตา (Modern Clean): เน้นสไตล์ Minimalist ใช้พื้นที่ว่างอย่างเหมาะสม คุมโทนสีและฟอนต์ให้สม่ำเสมอ
 ลำดับสายตาเด่นชัด (Visual Hierarchy): ขนาดและน้ำหนักตัวอักษรต้องแบ่งแยกหัวข้อชัดเจน ข้อมูลสำคัญต้องเข้าถึงได้ง่ายภายใน 3 คลิก
-การตอบสนองที่ลื่นไหล (Smooth Interactions): มี Hover/Active states ที่นุ่มนวล และต้องมี Loading Indicators หรือ Skeleton Screens แสดงสถานะเสมอเมื่อระบบกำลังรอข้อมูลตอบกลับจาก API ของ GAS เพื่อมอบประสบการณ์การใช้งานที่ดีที่สุดในโลก
-ความง่ายต่อการใช้งาน (Accessibility): จุดสัมผัสหรือปุ่มบนจอสัมผัสต้องมีขนาดอย่างน้อย 44x44 พิกเซล และค่าความต่างของสี (Color Contrast) ต้องอ่านง่าย
+การตอบสนองที่ลื่นไหล (Smooth Interactions): มี Hover/Active states ที่นุ่มนวล และต้องมี Loading Indicators หรือ Skeleton Screens แสดงสถานะเสมอเมื่อระบบกำลังรอข้อมูลหรือกำลังอัปโหลดไฟล์ขึ้น Google Drive เพื่อไม่ให้ผู้ใช้งานรู้สึกว่าเว็บค้าง
+ความง่ายต่อการใช้งาน (Accessibility): จุดสัมผัสหรือปุ่มบนจอสัมผัสต้องมีขนาดอย่างน้อย 44x44 พิกเซล และค่าความต่างของสีต้องอ่านง่าย
 
 9. มาตรฐานการพิมพ์เอกสารราชการไทย (Print CSS Standards)
-เมื่อหน้าเว็บโฮสต์ภายนอกสั่งพิมพ์หน้าต่างรายงานออกทางเครื่องพิมพ์ หรือบันทึกเป็น PDF (@media print และ @page):
+เมื่อหน้าเว็บสั่งพิมพ์รายงาน หรือบันทึกเป็น PDF (@media print และ @page):
 ขนาดกระดาษ: A4 แนวตั้ง
 ระยะขอบ (Margin): ซ้าย/บน 1.5 นิ้ว (3.81 ซม.) ขวา/ล่าง 1 นิ้ว (2.54 ซม.) เพื่อให้ตรงกับโครงสร้างแบบฟอร์มราชการไทย
 จัดระเบียบหน้า: ซ่อนปุ่มกด/Navigation (display: none;) ทั้งหมดออกไปจากหน้ากระดาษ
