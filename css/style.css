@@ -9,13 +9,15 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Sarabun', sans-serif; }
-
 body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
-
 .container { max-width: 800px; margin: 0 auto; }
 
 header { text-align: center; margin-bottom: 30px; }
-header h2 { color: var(--primary); }
+header h2 { color: var(--primary); margin-bottom: 10px; }
+
+.nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+.tab-btn { padding: 10px 20px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+.tab-btn.active { background: var(--primary); color: white; }
 
 .card { background: var(--card-bg); padding: 20px; margin-bottom: 20px; border-radius: var(--radius); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 .card h3 { font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
@@ -35,11 +37,19 @@ header h2 { color: var(--primary); }
 .btn-outline { background: transparent; border: 1px dashed var(--primary); color: var(--primary); width: auto; }
 .btn-outline:hover { background: #e6f0fa; }
 .btn-delete { background: #ff4d4f; color: white; padding: 10px; border-radius: var(--radius); cursor: pointer; border: none; }
+.btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 4px; background: #17a2b8; color: white; border: none; cursor: pointer; }
+.btn-sm:hover { background: #138496; }
 
 .summary-card { background: #fdfdfd; border: 1px solid var(--border); }
 .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; }
 .summary-row.total { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-top: 10px; }
 .summary-text { font-size: 0.9rem; color: #555; margin-top: 10px; }
+
+.table-responsive { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; }
+.data-table th, .data-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+.data-table th { background-color: var(--bg); font-weight: bold; white-space: nowrap; }
+.data-table tbody tr:hover { background-color: #f8f9fa; }
 
 .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
 .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }

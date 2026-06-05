@@ -6,96 +6,107 @@
     <title>ระบบบันทึก บร.1 / มท.1</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="js/report.js"></script> </head>
+    <script src="js/report.js"></script>
+</head>
 <body>
     <div class="container">
         <header>
-            <h2>📝 บันทึกข้อมูล บร.1 และ มท.1</h2>
-            <p>บันทึกประวัติการแก้ไขไฟฟ้าขัดข้อง</p>
+            <h2>⚡ PEA SERVICE MANAGE</h2>
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('form')">📝 ฟอร์มบันทึกงาน</button>
+                <button class="tab-btn" onclick="switchTab('dashboard')">📊 แดชบอร์ด & ประวัติ</button>
+            </div>
         </header>
 
-        <form id="serviceForm">
-            <div class="card">
-                <h3>1. ข้อมูลทั่วไป</h3>
+        <div id="formSection">
+            <form id="serviceForm">
+                <input type="hidden" id="editRowIndex" value="">
+                <input type="hidden" id="editTimestamp" value="">
+                
+                <div class="card">
+                    <h3>1. ข้อมูลทั่วไป</h3>
+                    <div class="grid-2">
+                        <div class="form-group"><label>วันที่ให้บริการ</label><input type="date" id="serviceDate" required></div>
+                        <div class="form-group"><label>ใบ บร.1 เล่มที่ / เลขที่</label><input type="text" id="br1Info" placeholder="เช่น 7804 / 390198" required></div>
+                        <div class="form-group"><label>ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ</label><input type="text" id="customerName" required></div>
+                        <div class="form-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="phone" required></div>
+                        <div class="form-group"><label>หมายเลขมิเตอร์ PEA</label><input type="text" id="meterNo" required></div>
+                        <div class="form-group"><label>พชง. / ผู้ประมาณการ</label><input type="text" id="staffName" required></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>2. เวลาปฏิบัติงาน</h3>
+                    <div class="grid-2">
+                        <div class="form-group"><label>ตั้งแต่เวลา</label><input type="time" id="timeStart" onchange="calculateTotal()" required></div>
+                        <div class="form-group"><label>ถึงเวลา</label><input type="time" id="timeEnd" onchange="calculateTotal()" required></div>
+                    </div>
+                    <p class="summary-text">รวมเวลา: <span id="totalHoursTxt">0 ชม. 0 นาที</span> (ค่าบริการ: <span id="serviceFeeTxt">0</span> บาท)</p>
+                </div>
+
+                <div class="card">
+                    <h3>3. รายการพัสดุ</h3>
+                    <div id="itemsContainer"></div>
+                    <button type="button" class="btn btn-outline" onclick="addItemRow()">+ เพิ่มพัสดุ</button>
+                    <datalist id="materialsList"></datalist>
+                </div>
+
+                <div class="card summary-card">
+                    <h3>สรุปค่าใช้จ่าย</h3>
+                    <div class="summary-row"><span>1. ค่าปลด-สับอุปกรณ์</span><span id="sumSwitch">570.00 บาท</span></div>
+                    <div class="summary-row"><span>2. ค่าบริการแก้ไขไฟฟ้า (ตามเวลา)</span><span id="sumService">0.00 บาท</span></div>
+                    <div class="summary-row"><span>3. ค่าพัสดุอุปกรณ์ (+40% แล้ว)</span><span id="sumMaterials">0.00 บาท</span></div>
+                    <hr>
+                    <div class="summary-row total"><span>รวมเป็นเงินทั้งสิ้น</span><span id="sumTotal">570.00 บาท</span></div>
+
+                    <div class="grid-2" style="margin-top: 15px;">
+                        <button type="button" class="btn btn-outline" style="border-color:#28a745; color:#28a745;" onclick="triggerReportPrint('BR1')">🖨️ พิมพ์ใบ บร.1</button>
+                        <button type="button" class="btn btn-outline" style="border-color:#ffc107; color:#856404;" onclick="triggerReportPrint('MT1')">🖨️ พิมพ์ใบ มท.1</button>
+                    </div>
+                </div>
+
                 <div class="grid-2">
-                    <div class="form-group">
-                        <label>วันที่ให้บริการ</label>
-                        <input type="date" id="serviceDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label>ใบ บร.1 เล่มที่ / เลขที่</label>
-                        <input type="text" id="br1Info" placeholder="เช่น 7804 / 390198" required>
-                    </div>
-                    <div class="form-group">
-                        <label>ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ</label>
-                        <input type="text" id="customerName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>เบอร์โทรศัพท์</label>
-                        <input type="tel" id="phone" required>
-                    </div>
-                    <div class="form-group">
-                        <label>หมายเลขมิเตอร์ PEA</label>
-                        <input type="text" id="meterNo" required>
-                    </div>
-                    <div class="form-group">
-                        <label>พชง. / ผู้ประมาณการ</label>
-                        <input type="text" id="staffName" required>
-                    </div>
+                    <button type="button" class="btn btn-outline" style="border-color:#6c757d; color:#6c757d;" onclick="resetForm()">ล้างฟอร์ม</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">บันทึกข้อมูลเข้าระบบ</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="dashboardSection" style="display: none;">
+            <div class="card">
+                <h3>📊 สรุปผลงานรายบุคคล (Dashboard)</h3>
+                <div class="table-responsive">
+                    <table class="data-table" id="dashboardTable">
+                        <thead>
+                            <tr>
+                                <th>ชื่อเจ้าหน้าที่</th>
+                                <th>จำนวนงาน (ใบ)</th>
+                                <th>ยอดจัดเก็บรวม (บาท)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
 
             <div class="card">
-                <h3>2. เวลาปฏิบัติงาน</h3>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>ตั้งแต่เวลา</label>
-                        <input type="time" id="timeStart" onchange="calculateTotal()" required>
-                    </div>
-                    <div class="form-group">
-                        <label>ถึงเวลา</label>
-                        <input type="time" id="timeEnd" onchange="calculateTotal()" required>
-                    </div>
-                </div>
-                <p class="summary-text">รวมเวลา: <span id="totalHoursTxt">0 ชม. 0 นาที</span> (ค่าบริการ: <span id="serviceFeeTxt">0</span> บาท)</p>
-            </div>
-
-            <div class="card">
-                <h3>3. รายการพัสดุ</h3>
-                <div id="itemsContainer">
-                    </div>
-                <button type="button" class="btn btn-outline" onclick="addItemRow()">+ เพิ่มพัสดุ</button>
-                <datalist id="materialsList"></datalist>
-            </div>
-
-            <div class="card summary-card">
-                <h3>สรุปค่าใช้จ่าย</h3>
-                <div class="summary-row">
-                    <span>1. ค่าปลด-สับอุปกรณ์</span>
-                    <span id="sumSwitch">570.00 บาท</span>
-                </div>
-                <div class="summary-row">
-                    <span>2. ค่าบริการแก้ไขไฟฟ้า (ตามเวลา)</span>
-                    <span id="sumService">0.00 บาท</span>
-                </div>
-                <div class="summary-row">
-                    <span>3. ค่าพัสดุอุปกรณ์ (+40% แล้ว)</span>
-                    <span id="sumMaterials">0.00 บาท</span>
-                </div>
-                <hr>
-                <div class="summary-row total">
-                    <span>รวมเป็นเงินทั้งสิ้น</span>
-                    <span id="sumTotal">570.00 บาท</span>
-                </div>
-
-                <div class="grid-2" style="margin-top: 15px;">
-                    <button type="button" class="btn btn-outline" style="border-color:#28a745; color:#28a745;" onclick="triggerReportPrint('BR1')">🖨️ พิมพ์ใบ บร.1</button>
-                    <button type="button" class="btn btn-outline" style="border-color:#ffc107; color:#856404;" onclick="triggerReportPrint('MT1')">🖨️ พิมพ์ใบ มท.1</button>
+                <h3>🕒 ประวัติการบันทึกงาน (ล่าสุด)</h3>
+                <div class="table-responsive">
+                    <table class="data-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่</th>
+                                <th>ลูกค้า</th>
+                                <th>เจ้าหน้าที่</th>
+                                <th>ยอดรวม</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
-
-            <button type="submit" class="btn btn-primary" id="submitBtn">บันทึกข้อมูลเข้าระบบ</button>
-        </form>
+        </div>
     </div>
 
     <div id="printArea"></div>
