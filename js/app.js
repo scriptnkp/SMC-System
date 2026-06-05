@@ -1,20 +1,14 @@
-// URL ของ Google Apps Script ของคุณ (Fix ไว้เลย)
+// URL ของ Google Apps Script ของคุณ
 const API_URL = 'https://script.google.com/macros/s/AKfycbxzaxiO9VErx1JeRK1RxFspKNYAKsljlyx5de4MPiAO72JP7GIh7Mr2QGJ5SzwWcABE/exec';
 
-let materialsData = []; // เก็บข้อมูลพัสดุจาก CSV
+let materialsData = [];
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. โหลดไฟล์ CSV อัตโนมัติเมื่อเปิดหน้าเว็บ (สมมติว่าไฟล์อยู่ในโฟลเดอร์เดียวกันบน GitHub)
     loadCSV('ราคามาตราฐาน.csv'); 
-    
-    // ตั้งค่าวันที่ปัจจุบันให้ช่องวันที่
     document.getElementById('serviceDate').valueAsDate = new Date();
-    
-    // สร้างช่องใส่พัสดุเริ่มต้น 1 ช่อง
     addItemRow();
 });
 
-// ฟังก์ชันอ่านไฟล์ CSV ด้วย PapaParse
 function loadCSV(url) {
     showLoader('กำลังโหลดฐานข้อมูลราคา...');
     Papa.parse(url, {
@@ -24,11 +18,8 @@ function loadCSV(url) {
         complete: function(results) {
             materialsData = results.data;
             const datalist = document.getElementById('materialsList');
-            
-            // สร้าง Dropdown แบบค้นหาได้
             materialsData.forEach(item => {
                 const option = document.createElement('option');
-                // แสดงรหัสพัสดุ + ชื่อ
                 option.value = `${item['รหัสพัสดุ']} - ${item['ชื่อพัสดุ']}`;
                 datalist.appendChild(option);
             });
@@ -37,12 +28,11 @@ function loadCSV(url) {
         error: function(err) {
             console.error("CSV Load Error:", err);
             hideLoader();
-            alert("ไม่สามารถโหลดไฟล์ ราคามาตราฐาน.csv ได้ กรุณาตรวจสอบว่ามีไฟล์อยู่บนระบบ");
+            alert("ไม่สามารถโหลดไฟล์ ราคามาตราฐาน.csv ได้");
         }
     });
 }
 
-// ฟังก์ชันเพิ่มบรรทัดพัสดุ
 function addItemRow() {
     const container = document.getElementById('itemsContainer');
     const rowId = Date.now();
@@ -61,9 +51,7 @@ function removeRow(rowId) {
     calculateTotal();
 }
 
-// ฟังก์ชันหลัก: คำนวณเงินทั้งหมด
 function calculateTotal() {
-    // 1. คำนวณค่าบริการ (จากเวลา)
     const start = document.getElementById('timeStart').value;
     const end = document.getElementById('timeEnd').value;
     let serviceFee = 0;
@@ -71,24 +59,21 @@ function calculateTotal() {
     if (start && end) {
         const startTime = new Date(`2000-01-01T${start}`);
         let endTime = new Date(`2000-01-01T${end}`);
-        
-        if (endTime < startTime) endTime.setDate(endTime.getDate() + 1); // ข้ามวัน
+        if (endTime < startTime) endTime.setDate(endTime.getDate() + 1);
         
         let diffMins = (endTime - startTime) / 60000;
         let hours = Math.floor(diffMins / 60);
         let mins = diffMins % 60;
         document.getElementById('totalHoursTxt').innerText = `${hours} ชม. ${mins} นาที`;
 
-        // ตรรกะ: 30 นาทีแรก 285 / ต่อไปทุก 30 นาที 285
         if (diffMins > 0) {
-            serviceFee = 285; // 30 นาทีแรก
+            serviceFee = 285;
             if (diffMins > 30) {
                 serviceFee += Math.ceil((diffMins - 30) / 30) * 285;
             }
         }
     }
 
-    // 2. คำนวณค่าพัสดุ
     let materialsFee = 0;
     const itemRows = document.querySelectorAll('.item-row');
     
@@ -97,25 +82,17 @@ function calculateTotal() {
         const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
         
         if (itemVal) {
-            const itemCode = itemVal.split(' - ')[0]; // แยกรหัสพัสดุออกมา
+            const itemCode = itemVal.split(' - ')[0];
             const matchedItem = materialsData.find(m => m['รหัสพัสดุ'] === itemCode);
             
             if (matchedItem) {
-                // ตรรกะ: เช็ค Column E (ราคามาตรฐาน) ถ้าไม่มี ดึง Column K (Std_อีสาน)
                 let price = parseFloat(matchedItem['ราคามาตรฐาน']);
-                if (isNaN(price) || price === 0) {
-                    price = parseFloat(matchedItem['Std_อีสาน']);
-                }
-                
-                if (!isNaN(price)) {
-                    // บวก 40% (x 1.4) ตามโจทย์
-                    materialsFee += (price * 1.4) * qty;
-                }
+                if (isNaN(price) || price === 0) price = parseFloat(matchedItem['Std_อีสาน']);
+                if (!isNaN(price)) materialsFee += (price * 1.4) * qty;
             }
         }
     });
 
-    // 3. อัปเดตหน้าจอ
     const switchFee = 570;
     const total = switchFee + serviceFee + materialsFee;
 
@@ -125,11 +102,8 @@ function calculateTotal() {
     document.getElementById('sumTotal').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' บาท';
 }
 
-// จับเหตุการณ์ตอนกด Submit Form
 document.getElementById('serviceForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    
-    // สร้าง Array ของรายการพัสดุที่เลือก
     const items = [];
     document.querySelectorAll('.item-row').forEach(row => {
         items.push({
@@ -138,7 +112,6 @@ document.getElementById('serviceForm').addEventListener('submit', function(e) {
         });
     });
 
-    // เตรียมก้อนข้อมูล (Payload) ตามชื่อคอลัมน์ฝั่ง Backend
     const payload = {
         serviceDate: document.getElementById('serviceDate').value,
         timeStart: document.getElementById('timeStart').value,
@@ -154,15 +127,12 @@ document.getElementById('serviceForm').addEventListener('submit', function(e) {
         serviceFee: parseFloat(document.getElementById('sumService').innerText.replace(/,/g, '')),
         materialsFee: parseFloat(document.getElementById('sumMaterials').innerText.replace(/,/g, '')),
         totalBr1: parseFloat(document.getElementById('sumTotal').innerText.replace(/,/g, '')),
-        totalMt1: parseFloat(document.getElementById('sumTotal').innerText.replace(/,/g, '')) // ยอดเดียวกัน
+        totalMt1: parseFloat(document.getElementById('sumTotal').innerText.replace(/,/g, ''))
     };
 
-    // ส่งเข้า GAS API
     showLoader('กำลังบันทึกข้อมูลเข้าระบบ...');
-    
     fetch(API_URL, {
         method: 'POST',
-        // GAS รองรับ text/plain เพื่อเลี่ยงปัญหา CORS Preflight ได้ดีที่สุด
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
     })
@@ -171,8 +141,8 @@ document.getElementById('serviceForm').addEventListener('submit', function(e) {
         hideLoader();
         if (result.status === 'success') {
             alert('บันทึกข้อมูลเรียบร้อยแล้ว!');
-            document.getElementById('serviceForm').reset(); // เคลียร์ฟอร์ม
-            calculateTotal(); // รีเซ็ตยอดเงิน
+            document.getElementById('serviceForm').reset();
+            calculateTotal();
         } else {
             alert('เกิดข้อผิดพลาด: ' + result.message);
         }
@@ -184,11 +154,42 @@ document.getElementById('serviceForm').addEventListener('submit', function(e) {
     });
 });
 
-// UI Helpers
 function showLoader(text) {
     document.getElementById('loader').style.display = 'flex';
     document.getElementById('loaderText').innerText = text;
 }
-function hideLoader() {
-    document.getElementById('loader').style.display = 'none';
+function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+
+// ฟังก์ชันส่งข้อมูลไปให้ระบบออกรายงานและสั่งพิมพ์
+function triggerReportPrint(reportType) {
+    const items = [];
+    document.querySelectorAll('.item-row').forEach(row => {
+        items.push({
+            itemName: row.querySelector('.item-select').value,
+            qty: parseFloat(row.querySelector('.item-qty').value) || 1
+        });
+    });
+
+    const currentData = {
+        serviceDate: document.getElementById('serviceDate').value,
+        timeStart: document.getElementById('timeStart').value,
+        timeEnd: document.getElementById('timeEnd').value,
+        totalHours: document.getElementById('totalHoursTxt').innerText,
+        staffName: document.getElementById('staffName').value,
+        customerName: document.getElementById('customerName').value,
+        phone: document.getElementById('phone').value,
+        meterNo: document.getElementById('meterNo').value,
+        br1Info: document.getElementById('br1Info').value,
+        items: items,
+        switchFee: 570,
+        serviceFee: parseFloat(document.getElementById('sumService').innerText.replace(/,/g, '')) || 0,
+        materialsFee: parseFloat(document.getElementById('sumMaterials').innerText.replace(/,/g, '')) || 0,
+        totalBr1: parseFloat(document.getElementById('sumTotal').innerText.replace(/,/g, '')) || 570,
+    };
+
+    if (reportType === 'BR1') {
+        printBR1(currentData);
+    } else if (reportType === 'MT1') {
+        printMT1(currentData);
+    }
 }

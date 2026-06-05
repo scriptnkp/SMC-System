@@ -6,7 +6,7 @@
     <title>ระบบบันทึก บร.1 / มท.1</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-</head>
+    <script src="js/report.js"></script> </head>
 <body>
     <div class="container">
         <header>
@@ -46,7 +46,7 @@
             </div>
 
             <div class="card">
-                <h3>2. เวลาปฏิบัติงาน (ระบบจะคำนวณค่าบริการอัตโนมัติ)</h3>
+                <h3>2. เวลาปฏิบัติงาน</h3>
                 <div class="grid-2">
                     <div class="form-group">
                         <label>ตั้งแต่เวลา</label>
@@ -61,12 +61,11 @@
             </div>
 
             <div class="card">
-                <h3>3. รายการพัสดุ (ค้นหาจากรหัส หรือ ชื่อ)</h3>
+                <h3>3. รายการพัสดุ</h3>
                 <div id="itemsContainer">
                     </div>
                 <button type="button" class="btn btn-outline" onclick="addItemRow()">+ เพิ่มพัสดุ</button>
-                <datalist id="materialsList">
-                    </datalist>
+                <datalist id="materialsList"></datalist>
             </div>
 
             <div class="card summary-card">
@@ -88,11 +87,18 @@
                     <span>รวมเป็นเงินทั้งสิ้น</span>
                     <span id="sumTotal">570.00 บาท</span>
                 </div>
+
+                <div class="grid-2" style="margin-top: 15px;">
+                    <button type="button" class="btn btn-outline" style="border-color:#28a745; color:#28a745;" onclick="triggerReportPrint('BR1')">🖨️ พิมพ์ใบ บร.1</button>
+                    <button type="button" class="btn btn-outline" style="border-color:#ffc107; color:#856404;" onclick="triggerReportPrint('MT1')">🖨️ พิมพ์ใบ มท.1</button>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary" id="submitBtn">บันทึกข้อมูลเข้าระบบ</button>
         </form>
     </div>
+
+    <div id="printArea"></div>
 
     <div id="loader" class="loader-overlay" style="display: none;">
         <div class="spinner"></div>
