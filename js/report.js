@@ -1,148 +1,272 @@
 // ==========================================
-// Report Engine: จัด Layout ด้วย Table 100% (ป้องกัน CSS เพี้ยนตอนพิมพ์)
+// Report Engine: จัด Layout แบบฟอร์ม บร.1 และ มท.1
+// ดึงโครงสร้าง HTML/CSS ต้นฉบับจาก กฟภ. 100%
 // ==========================================
 
 function printBR1(formData) {
     const printArea = document.getElementById('printArea');
     
-    // สร้างแถวรายการพัสดุ พร้อมราคาหน่วยละ และ จำนวนเงิน
+    // 1. จัดการข้อมูลรายการพัสดุ
     let itemsHtml = '';
+    let totalMaterialCost = 0;
+
     formData.items.forEach((item, index) => {
         if(item.itemName) {
+            // แยกรหัส และ ชื่อพัสดุ
+            let code = item.itemName.split(' - ')[0] || '';
+            let name = item.itemName.split(' - ')[1] || item.itemName;
+            
+            // ถอดราคาฐาน (ก่อนบวก 40%) กลับมาแสดงในช่อง "ราคามาตรฐาน"
+            let basePrice = (item.unitPrice || 0) / 1.4;
+            let rowTotal = item.totalPrice || 0;
+            totalMaterialCost += rowTotal;
+
             itemsHtml += `
                 <tr>
-                    <td style="border: 1px solid #000; text-align:center; padding: 4px;">${index + 1}</td>
-                    <td style="border: 1px solid #000; padding: 4px;">${item.itemName}</td>
-                    <td style="border: 1px solid #000; text-align:center; padding: 4px;">${item.qty}</td>
-                    <td style="border: 1px solid #000; text-align:right; padding: 4px;">${item.unitPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                    <td style="border: 1px solid #000; text-align:right; padding: 4px;">${item.totalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td>${index + 1}</td>
+                    <td>${code}</td>
+                    <td class="left">${name}</td>
+                    <td>${item.qty}</td>
+                    <td>${basePrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td>${rowTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td></td>
                 </tr>
             `;
         }
     });
 
-    // คำนวณค่าบริการย่อย
+    if(!itemsHtml) {
+        itemsHtml = '<tr><td colspan="7" style="text-align:center; color:#999; padding: 10px;">- ไม่มีรายการพัสดุ -</td></tr>';
+    }
+
+    // 2. คำนวณค่าบริการและผลรวม
     let first30Min = formData.serviceFee > 0 ? 285 : 0;
     let next30Min = formData.serviceFee > 285 ? formData.serviceFee - 285 : 0;
+    let totalSectionA = formData.switchFee + formData.serviceFee;
 
+    // คำนวณบล็อกสรุปเงิน (Summary Block)
+    let sum1 = formData.switchFee;
+    let sum2 = formData.serviceFee + formData.materialsFee;
+    let sumTotal = sum1 + sum2;
+    let vatAmount = sumTotal * 0.07;
+    let grandTotal = sumTotal + vatAmount;
+
+    // จัดการเลขที่ บร.1
+    let br1Book = formData.br1Info.split('/')[0] || '-';
+    let br1No = formData.br1Info.split('/')[1] || formData.br1Info;
+
+    // 3. สร้าง HTML Template (รวม CSS ที่ Scope ไว้ใน #br1-print-layout ป้องกันหน้าเว็บพัง)
     const htmlContent = `
-        <div style="font-family: 'Sarabun', sans-serif !important; font-size: 15px; color: #000; line-height: 1.5; padding: 0 20px;">
-            
-            <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 10px;">
-                <tr>
-                    <td width="50%" valign="top">การไฟฟ้าส่วนภูมิภาค จังหวัดนครพนม</td>
-                    <td width="50%" valign="top" align="right">
-                        <table width="350" border="0" cellpadding="0" cellspacing="0" align="right">
-                            <tr>
-                                <td width="160" align="left">เลขที่ใบสั่งซ่อม :</td>
-                                <td align="left">................................................</td>
-                            </tr>
-                            <tr>
-                                <td align="left">กฟฟ.</td>
-                                <td align="left">กฟจ.นครพนม</td>
-                            </tr>
-                            <tr>
-                                <td align="left">เจ้าหน้าที่ผู้ประมาณการ :</td>
-                                <td align="left">${formData.staffName}</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+        <style>
+            @media print {
+                @page { size: A4 portrait; margin: 0.5in; }
+                body * { visibility: hidden; }
+                #printArea, #printArea * { visibility: visible; }
+                #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+                
+                #br1-print-layout { font-family:'Sarabun',sans-serif; background:#fff; max-width:720px; margin:0 auto; padding:10px 20px; font-size:13px; color:#111; line-height:1.5; }
+                #br1-print-layout .header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+                #br1-print-layout .logo-area { display:flex; align-items:center; gap:10px; }
+                #br1-print-layout .logo-circle { width:52px; height:52px; border:2px solid #1a3a6b; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+                #br1-print-layout .logo-inner { width:38px; height:38px; border:2px solid #1a3a6b; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:700; color:#1a3a6b; text-align:center; line-height:1.2; }
+                #br1-print-layout .org-name { font-size:18px; font-weight:700; color:#1a3a6b; text-align:center; flex:1; }
+                #br1-print-layout .doc-info { text-align:right; font-size:12px; line-height:1.8; min-width:210px; }
+                #br1-print-layout .doc-title { text-align:center; font-size:14px; font-weight:700; border:2px solid #111; padding:5px 12px; margin:8px 0; display:inline-block; width:100%; box-sizing: border-box; }
+                #br1-print-layout .section-label { font-weight:700; font-size:13px; margin:10px 0 6px; }
+                #br1-print-layout .info-row-full { display:flex; gap:6px; align-items:baseline; font-size:12.5px; padding:2px 0; border-bottom:1px dotted #bbb; margin-bottom:2px; }
+                #br1-print-layout .info-label { color:#444; white-space:nowrap; min-width:130px; font-size:12px; }
+                #br1-print-layout .info-value { font-weight:500; border-bottom:1px solid #333; flex:1; min-width:80px; padding:0 4px; }
+                #br1-print-layout .section-a { border:1px solid #888; padding:10px 12px; margin:8px 0; border-radius:2px; }
+                #br1-print-layout .flex-space { display:flex; justify-content:space-between; }
+                #br1-print-layout .underline { border-bottom:1px solid #333; min-width:80px; padding:0 4px; display:inline-block; text-align:right; }
+                #br1-print-layout table.items { width:100%; border-collapse:collapse; font-size:12px; margin:8px 0; }
+                #br1-print-layout table.items th { background:#e8e8e8; border:1px solid #888; padding:5px 6px; text-align:center; font-weight:700; }
+                #br1-print-layout table.items td { border:1px solid #888; padding:4px 6px; text-align:center; }
+                #br1-print-layout table.items td.left { text-align:left; }
+                #br1-print-layout .summary-block { border:1px solid #888; padding:8px 12px; margin:8px 0; border-radius:2px; }
+                #br1-print-layout .sum-row { display:flex; align-items:baseline; gap:6px; font-size:12.5px; padding:2px 0; }
+                #br1-print-layout .sum-label { flex:1; font-size:12px; color:#333; }
+                #br1-print-layout .sum-code { font-size:11px; color:#555; min-width:60px; }
+                #br1-print-layout .sum-val { min-width:80px; text-align:right; font-weight:500; border-bottom:1px solid #555; padding:0 4px; }
+                #br1-print-layout .sum-unit { min-width:30px; font-size:12px; }
+                #br1-print-layout .total-final { display:flex; justify-content:flex-end; gap:10px; font-weight:700; font-size:13.5px; margin:8px 0 4px; padding:6px 0; border-top:2px solid #111; border-bottom:2px solid #111; }
+                #br1-print-layout .grand-total-text { font-size:12.5px; text-align:center; margin:4px 0 10px; font-weight:500; }
+                #br1-print-layout .sig-area { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px; }
+                #br1-print-layout .sig-block { text-align:center; font-size:12px; }
+                #br1-print-layout .sig-line { border-bottom:1px solid #555; margin:24px 20px 4px; display:block; }
+                #br1-print-layout .sig-date { margin-top:4px; font-size:11.5px; color:#555; }
+                #br1-print-layout .badge { background:#1a3a6b; color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:2px; }
+            }
+        </style>
 
-            <div style="text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 5px;">
-                ใบประมาณการค่าใช้จ่ายบริการแก้ไขไฟฟ้าขัดข้อง (บร.1)
+        <div id="br1-print-layout">
+            <div class="header-top">
+                <div class="logo-area">
+                <div class="logo-circle"><div class="logo-inner">กฟภ.</div></div>
+                </div>
+                <div class="org-name">การไฟฟ้าส่วนภูมิภาค จังหวัดนครพนม</div>
+                <div class="doc-info">
+                <div><strong>เลขที่ใบสั่งซ่อม :</strong> <span class="badge">${br1No}</span></div>
+                <div>กฟฟ. : กฟจ.นครพนม</div>
+                <div>เจ้าหน้าที่ผู้ประมาณการ : ${formData.staffName}</div>
+                <div>วันที่ : ${formatThaiDate(formData.serviceDate)}</div>
+                </div>
+            </div>
+
+            <div class="doc-title">ใบประมาณการค่าใช้จ่ายบริการแก้ไขไฟฟ้าขัดข้อง (บร.1)</div>
+
+            <div class="section-label">ผู้รับบริการ</div>
+            <div class="info-row-full">
+                <span class="info-label">1.) ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ :</span>
+                <span class="info-value">${formData.customerName}</span>
+                <span style="font-size:12px">โทร</span>
+                <span class="info-value" style="max-width:130px">${formData.phone}</span>
+            </div>
+            <div class="info-row-full">
+                <span class="info-label">2.) หมายเลขมิเตอร์ PEA. / NO :</span>
+                <span class="info-value">${formData.meterNo}</span>
+            </div>
+            <div class="info-row-full" style="align-items:center;flex-wrap:wrap;gap:4px">
+                <span style="font-size:12px">- ใบ บร.1 / เล่มที่</span>
+                <span class="info-value" style="max-width:50px">${br1Book}</span>
+                <span style="font-size:12px">เลขที่ :</span>
+                <span class="info-value" style="max-width:80px">${br1No}</span>
+                <span style="font-size:12px">ให้บริการเมื่อวันที่</span>
+                <span class="info-value" style="max-width:140px">${formatThaiDate(formData.serviceDate)}</span>
+            </div>
+            <div class="info-row-full" style="align-items:center;flex-wrap:wrap;gap:4px">
+                <span style="font-size:12px">- ตั้งแต่เวลา :</span>
+                <span class="info-value" style="max-width:50px">${formData.timeStart}</span>
+                <span style="font-size:12px">น. ถึงเวลา :</span>
+                <span class="info-value" style="max-width:50px">${formData.timeEnd}</span>
+                <span style="font-size:12px">น. รวมเวลาปฏิบัติงาน</span>
+                <span class="info-value" style="max-width:60px">${formData.totalHours}</span>
+            </div>
+            <div class="info-row-full" style="align-items:center;flex-wrap:wrap;gap:4px">
+                <span style="font-size:12px">3.) พชง./ผู้ให้บริการ (ชื่อ - สกุล) :</span>
+                <span class="info-value" style="max-width:150px">${formData.staffName}</span>
+                <span style="font-size:12px">รวมผู้ปฏิบัติงาน จำนวน</span>
+                <span class="info-value" style="max-width:30px;text-align:center">3</span>
+                <span style="font-size:12px">คน</span>
+            </div>
+
+            <div class="section-label">รายการปฏิบัติงาน</div>
+            <div class="section-a">
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
+                <strong style="font-size:13px">ข้อ ก. งานตรวจสอบและแก้ไขไฟฟ้าขัดข้อง :</strong>
+                <label style="font-size:12.5px;display:flex;align-items:center;gap:4px">
+                    <span style="font-family: Arial; font-size:14px;">&#9744;</span> <span>ด้านแรงสูง</span>
+                </label>
+                <label style="font-size:12.5px;display:flex;align-items:center;gap:4px">
+                    <span style="font-family: Arial; font-size:14px; font-weight:bold;">&#9745;</span> <span>ด้านแรงต่ำ</span>
+                </label>
+                </div>
+
+                <div class="flex-space" style="margin:4px 0">
+                <span style="font-size:12.5px">1.ค่าปลด - สับอุปกรณ์ตัดตอน</span>
+                <span style="font-size:12.5px">เป็นเงิน <strong class="underline">${formData.switchFee.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong> บาท</span>
+                </div>
+                <div style="margin:4px 0 2px;font-size:12.5px;font-weight:600">2.ค่าบริการแก้ไขไฟฟ้าขัดข้อง แรงสูง/แรงต่ำ</div>
+                <div class="flex-space" style="padding-left:16px;margin:2px 0">
+                <span style="font-size:12px">- สำหรับ 30 นาทีแรก 285 บาท</span>
+                <span style="font-size:12px">เป็นเงิน <strong class="underline">${first30Min.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong> บาท</span>
+                </div>
+                <div class="flex-space" style="padding-left:16px;margin:2px 0">
+                <span style="font-size:12px">- สำหรับครึ่งชั่วโมงต่อไป</span>
+                <span style="font-size:12px">เป็นเงิน <strong class="underline">${next30Min.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong> บาท</span>
+                </div>
+                <div class="flex-space" style="border-top:1.5px solid #333;margin-top:6px;padding-top:4px">
+                <strong style="font-size:13px">รวมเป็นเงิน</strong>
+                <strong style="font-size:13px"><span class="underline">${totalSectionA.toLocaleString('en-US', {minimumFractionDigits: 2})}</span> บาท</strong>
+                </div>
+            </div>
+
+            <div class="section-label">รายการพัสดุ</div>
+            <div style="font-size:12.5px;margin-bottom:4px"><strong>ข้อ ข. อุปกรณ์ที่ กฟภ. นำมาใช้ในการแก้ไขกระแสไฟฟ้าขัดข้องให้ ( ลูกค้า / ผู้ใช้ไฟ )</strong></div>
+            <div style="font-size:11.5px;color:#555;margin-bottom:6px">
+                ( 1.) ทำราคาพัสดุ กฟภ. ให้เป็นราคาผู้ใช้ไฟ (บวก 15%) &nbsp;&nbsp; ( 2.) ค่าดำเนินการบวก 31%
             </div>
             
-            <div style="text-align: right; margin-bottom: 10px;">
-                วันที่: ${formatThaiDate(formData.serviceDate)}
-            </div>
-
-            <div style="font-weight: bold; text-decoration: underline; margin-bottom: 5px;">ผู้รับบริการ</div>
-            <table width="100%" border="0" cellpadding="2" cellspacing="0" style="margin-left: 20px; margin-bottom: 10px;">
-                <tr>
-                    <td width="60%">1.) ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ : ${formData.customerName}</td>
-                    <td width="40%">โทร ${formData.phone}</td>
-                </tr>
-                <tr>
-                    <td colspan="2">2.) หมายเลขมิเตอร์ PEA. / NO : ${formData.meterNo}</td>
-                </tr>
-                <tr>
-                    <td colspan="2">-ใบ บร.1 / เล่มที่ ${formData.br1Info.split('/')[0] || '........'} เลขที่ : ${formData.br1Info.split('/')[1] || '........'} ให้บริการเมื่อวันที่ ${formatThaiDate(formData.serviceDate)}</td>
-                </tr>
-                <tr>
-                    <td colspan="2">- ตั้งแต่เวลา : ${formData.timeStart} น. ถึงเวลา : ${formData.timeEnd} น. รวมเวลาปฏิบัติงาน ${formData.totalHours}</td>
-                </tr>
-                <tr>
-                    <td colspan="2">3.) พชง/ผู้ให้บริการ (ชื่อ - สกุล) : ${formData.staffName} <span style="margin-left: 40px;">รวมผู้ปฏิบัติงาน จำนวน ..... คน</span></td>
-                </tr>
-            </table>
-
-            <div style="font-weight: bold; text-decoration: underline; margin-bottom: 5px;">รายการปฏิบัติงาน</div>
-            <table width="100%" border="0" cellpadding="2" cellspacing="0" style="margin-left: 20px; margin-bottom: 10px;">
-                <tr>
-                    <td colspan="2">
-                        <span style="font-family: Arial;">&#9745;</span> ข้อ ก. งานตรวจสอบและแก้ไขไฟฟ้าขัดข้อง 
-                        <span style="margin-left: 40px;"><span style="font-family: Arial;">&#9744;</span> ด้านแรงสูง</span>
-                        <span style="margin-left: 20px;"><span style="font-family: Arial;">&#9745;</span> ด้านแรงต่ำ</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td width="70%">1. ค่าปลด - สับอุปกรณ์ตัดตอน</td>
-                    <td width="30%" align="right">เป็นเงิน ${formData.switchFee.toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</td>
-                </tr>
-                <tr>
-                    <td>2. ค่าบริการแก้ไขไฟฟ้าขัดข้อง แรงสูง/แรงต่ำ</td>
-                    <td align="right"></td>
-                </tr>
-                <tr>
-                    <td style="padding-left: 20px; color: #333;">- สำหรับ 30 นาทีแรก 285 บาท</td>
-                    <td align="right">เป็นเงิน ${first30Min.toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</td>
-                </tr>
-                <tr>
-                    <td style="padding-left: 20px; color: #333;">- สำหรับครึ่งชั่วโมงต่อไป</td>
-                    <td align="right">เป็นเงิน ${next30Min.toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</td>
-                </tr>
-                <tr>
-                    <td style="font-weight: bold; padding-left: 20px;">รวมค่าแรงและบริการตรวจสอบแก้ไข</td>
-                    <td align="right" style="font-weight: bold;">รวมเป็นเงิน ${(formData.switchFee + formData.serviceFee).toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</td>
-                </tr>
-            </table>
-
-            <div style="font-weight: bold; text-decoration: underline; margin-bottom: 5px;">รายการพัสดุ</div>
-            <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-left: 20px; margin-bottom: 5px;">
-                <tr>
-                    <td>ข้อ ข. อุปกรณ์ที่ กฟภ. นำมาใช้ในการแก้ไขกระแสไฟฟ้าขัดข้องให้ (ลูกค้า / ผู้ใช้ไฟ)</td>
-                </tr>
-                <tr>
-                    <td style="padding-left: 20px;">
-                        (1.) ทำราคาพัสดุ กฟภ. ให้เป็นราคาผู้ใช้ไฟ (บวก 15%)<br>
-                        (2.) ค่าดำเนินการบวก 31%
-                    </td>
-                </tr>
-            </table>
-
-            <table width="100%" border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; margin-bottom: 5px;">
+            <table class="items">
                 <thead>
-                    <tr bgcolor="#f9f9f9">
-                        <th width="8%">ลำดับ</th>
-                        <th width="42%">รหัสพัสดุ - ชื่อพัสดุ</th>
-                        <th width="10%">จำนวน</th>
-                        <th width="20%">ราคาหน่วยละ</th>
-                        <th width="20%">จำนวนเงิน</th>
-                    </tr>
+                <tr>
+                    <th style="width:32px">ที่</th>
+                    <th style="width:100px">รหัส</th>
+                    <th>รายการ</th>
+                    <th style="width:45px">จำนวน</th>
+                    <th style="width:75px">ราคา<br>มาตราฐาน</th>
+                    <th style="width:90px">ราคาผู้ใช้ไฟ / (บาท)<br>ราคา+40%</th>
+                    <th style="width:60px">หมายเหตุ</th>
+                </tr>
                 </thead>
                 <tbody>
-                    ${itemsHtml || '<tr><td colspan="5" align="center" style="padding: 10px; color:#999;">- ไม่มีรายการพัสดุ -</td></tr>'}
+                    ${itemsHtml}
+                    <tr>
+                        <td colspan="5" style="text-align:right;font-weight:700">รวม</td>
+                        <td style="font-weight:700">${totalMaterialCost.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td></td>
+                    </tr>
                 </tbody>
             </table>
 
-            <div style="text-align: right; margin-bottom: 15px;">
-                เป็นเงิน ${formData.materialsFee.toLocaleString('en-US', {minimumFractionDigits: 2})} บาท
+            <div class="summary-block">
+                <div style="font-size:12px;font-weight:700;margin-bottom:6px">สรุปค่าใช้จ่าย :</div>
+                <div class="sum-row">
+                <span class="sum-label">1.) ค่าปลด-สับอุปกรณ์ตัดตอน</span>
+                <span class="sum-code"></span>
+                <span style="font-size:12px">เป็นเงิน</span>
+                <span class="sum-val">${sum1.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                <span class="sum-unit">บาท</span>
+                </div>
+                <div class="sum-row">
+                <span class="sum-label">2.) ค่าตรวจสอบและแก้ไข + ค่าพัสดุอุปกรณ์</span>
+                <span class="sum-code"></span>
+                <span style="font-size:12px">เป็นเงิน</span>
+                <span class="sum-val">${sum2.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                <span class="sum-unit">บาท</span>
+                </div>
+                <div class="sum-row" style="margin-top:4px">
+                <span class="sum-label" style="padding-left:16px">- รวมเป็นเงิน (ข้อ 1.+2. )</span>
+                <span class="sum-code"></span>
+                <span style="font-size:12px">เป็นเงิน</span>
+                <span class="sum-val">${sumTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                <span class="sum-unit">บาท</span>
+                </div>
+                <div class="sum-row">
+                <span class="sum-label" style="padding-left:16px">- รวมภาษี 7 %</span>
+                <span class="sum-code"></span>
+                <span style="font-size:12px">เป็นเงิน</span>
+                <span class="sum-val">${vatAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                <span class="sum-unit">บาท</span>
+                </div>
+                <div class="sum-row" style="font-weight:700;border-top:1px solid #aaa;padding-top:4px;margin-top:4px">
+                <span class="sum-label" style="padding-left:16px">- สรุป (ข้อ 1.+2. ) รวมค่าใช้จ่ายทั้งหมด</span>
+                <span class="sum-code"></span>
+                <span style="font-size:12px">เป็นเงิน</span>
+                <span class="sum-val" style="border-bottom:2px double #111">${grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                <span class="sum-unit">บาท</span>
+                </div>
             </div>
 
-            <div style="text-align: right; font-size: 18px; font-weight: bold;">
-                รวมเป็นเงินทั้งสิ้น <span style="margin-left: 20px;">${formData.totalBr1.toLocaleString('en-US', {minimumFractionDigits: 2})}</span> บาท
+            <div class="total-final">
+                <span>รวมเป็นเงินทั้งสิ้น :</span>
+                <span>${grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</span>
+            </div>
+            <div class="grand-total-text">( ${BAHTTEXT(grandTotal)} )</div>
+
+            <div class="sig-area">
+                <div class="sig-block">
+                <span class="sig-line"></span>
+                <div>(ลงชื่อ)................................................ผู้ประมาณการ</div>
+                <div style="margin-top:4px">( ${formData.staffName} )</div>
+                <div class="sig-date">............../............/..............</div>
+                </div>
+                <div class="sig-block">
+                <span class="sig-line"></span>
+                <div>(ลงชื่อ)................................................ผู้ตรวจ</div>
+                <div style="margin-top:4px">(...............................................)</div>
+                <div class="sig-date">............../............/..............</div>
+                </div>
             </div>
         </div>
     `;
@@ -151,6 +275,8 @@ function printBR1(formData) {
     window.print();
 }
 
+
+// โค้ดส่วน printMT1 และ Helper ยังคงเดิม เพื่อความต่อเนื่อง
 function printMT1(formData) {
     const printArea = document.getElementById('printArea');
     const mt1Section2 = formData.serviceFee + formData.materialsFee; 
@@ -160,13 +286,11 @@ function printMT1(formData) {
 
     const htmlContent = `
         <div style="font-family: 'Sarabun', sans-serif !important; font-size: 16px; color: #000; line-height: 1.6; padding: 0 30px;">
-            
             <div style="text-align: center; margin-bottom: 20px;">
                 <img src="https://upload.wikimedia.org/wikipedia/th/thumb/6/64/Provincial_Electricity_Authority_logo.svg/300px-Provincial_Electricity_Authority_logo.svg.png" width="60" style="margin-bottom: 5px;"><br>
                 <b style="font-size: 20px;">การไฟฟ้าส่วนภูมิภาค</b><br>
                 <span style="font-size: 16px;">PROVINCIAL ELECTRICITY AUTHORITY</span>
             </div>
-
             <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
                 <tr>
                     <td width="50%" valign="top">ที่ มท 5306.46/นพ.</td>
@@ -179,11 +303,9 @@ function printMT1(formData) {
                     </td>
                 </tr>
             </table>
-
             <div style="text-align: center; margin-bottom: 20px;">
                 ${formatThaiDate(formData.serviceDate)}
             </div>
-
             <table width="100%" border="0" cellpadding="4" cellspacing="0" style="margin-bottom: 15px;">
                 <tr>
                     <td width="8%" valign="top"><b>เรื่อง</b></td>
@@ -194,7 +316,6 @@ function printMT1(formData) {
                     <td>${formData.customerName}</td>
                 </tr>
             </table>
-
             <div style="text-indent: 50px; text-align: justify; margin-bottom: 20px;">
                 ด้วยในวันที่ ${formatThaiDate(formData.serviceDate)} เวลา ${formData.timeStart} น. ถึงเวลา ${formData.timeEnd} น.
                 การไฟฟ้าส่วนภูมิภาค จังหวัดนครพนม ได้บริการแก้กระแสไฟฟ้าขัดข้องให้แก่ หมายเลขผู้ใช้ไฟ ${formData.meterNo} 
@@ -202,7 +323,6 @@ function printMT1(formData) {
                 เลขที่ ${formData.br1Info.split('/')[1] || '.......'} เพื่อเรียกเก็บค่าใช้จ่ายในภายหลังนั้น บัดนี้ การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม
                 ได้ตรวจสอบประมาณการแล้วมีค่าใช้จ่าย ดังนี้
             </div>
-
             <table width="85%" border="0" cellpadding="4" cellspacing="0" align="center" style="margin-bottom: 30px;">
                 <tr>
                     <td width="60%">1.) ค่าปลด-สับอุปกรณ์ตัดตอน</td>
@@ -230,11 +350,9 @@ function printMT1(formData) {
                     <td style="font-weight: bold; text-align: right; padding-top: 10px; text-decoration: underline;">${totalGrand.toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</td>
                 </tr>
             </table>
-
             <div style="text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 60px;">
                 ( ${BAHTTEXT(totalGrand)} )
             </div>
-
             <table width="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                     <td width="50%"></td>
@@ -247,17 +365,15 @@ function printMT1(formData) {
             </table>
         </div>
     `;
-
     printArea.innerHTML = htmlContent;
     window.print();
 }
 
-// ---------------- Helper Functions ----------------
 function formatThaiDate(dateStr) {
     if (!dateStr) return '................................';
     const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
     const d = new Date(dateStr);
-    return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
 }
 
 function BAHTTEXT(num) {
