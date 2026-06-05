@@ -229,7 +229,6 @@ function printMT1(formData) {
     const vat = subTotal * 0.07; 
     const totalGrand = subTotal + vat; 
 
-    // ดึงโครงสร้าง HTML จากตัวอย่างเป๊ะๆ
     const htmlContent = `
         <div class="print-doc-mt1">
           <div class="clearfix">
@@ -326,6 +325,7 @@ function printMT1(formData) {
     window.print();
 }
 
+// 🟢 จุดที่แก้ไขวงเล็บตกหล่น (Syntax Error: Unexpected token '}')
 function formatThaiDate(dateStr) {
     if (!dateStr) return '................................';
     const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
