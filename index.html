@@ -2,410 +2,391 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>วิเคราะห์บาคาร่า</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>บาคาร่า Analyzer</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0d0d0f;
-    --bg2: #16161a;
-    --bg3: #1e1e24;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.15);
-    --text: #f0f0f0;
-    --text2: #999;
-    --banker: #4a9eff;
-    --banker-dark: #1a3a5c;
-    --banker-bg: rgba(74,158,255,0.12);
-    --player: #ff6b6b;
-    --player-dark: #8B1a1a;
-    --player-bg: rgba(255,107,107,0.12);
-    --tie: #51cf66;
-    --tie-bg: rgba(81,207,102,0.12);
-    --gold: #ffd43b;
-    --cell: 30px;
-  }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    min-height: 100vh;
-    padding: 16px;
-  }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0a0a0c;
+  --bg2:#141418;
+  --bg3:#1c1c22;
+  --bg4:#242430;
+  --b:#3d8ef0;
+  --b2:#1a4a8a;
+  --b-glow:rgba(61,142,240,0.3);
+  --p:#e84545;
+  --p2:#8a1a1a;
+  --p-glow:rgba(232,69,69,0.3);
+  --t:#30c45e;
+  --gold:#f5c842;
+  --text:#f0f0f5;
+  --text2:#888;
+  --border:rgba(255,255,255,0.07);
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden;}
+body{display:flex;flex-direction:column;min-height:100vh;}
 
-  h1 {
-    font-size: 20px;
-    font-weight: 600;
-    text-align: center;
-    margin-bottom: 4px;
-    letter-spacing: 1px;
-    color: var(--gold);
-  }
-  .subtitle { text-align: center; font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+/* Header */
+.hdr{padding:14px 16px 8px;text-align:center;}
+.hdr-title{font-size:17px;font-weight:700;letter-spacing:2px;color:var(--gold);}
+.hdr-sub{font-size:11px;color:var(--text2);margin-top:2px;}
 
-  /* Input buttons */
-  .btn-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-  .btn { border: none; border-radius: 10px; padding: 12px 0; font-size: 15px; font-weight: 700; cursor: pointer; flex: 1; min-width: 80px; letter-spacing: 0.5px; transition: transform 0.1s, opacity 0.1s; }
-  .btn:active { transform: scale(0.96); opacity: 0.85; }
-  .btn-B { background: linear-gradient(135deg, #1a5fa0, #4a9eff); color: #fff; }
-  .btn-P { background: linear-gradient(135deg, #a01a1a, #ff6b6b); color: #fff; }
-  .btn-T { background: linear-gradient(135deg, #1a6b2a, #51cf66); color: #fff; }
-  .btn-undo { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 16px; font-size: 13px; cursor: pointer; flex: 0 0 auto; }
-  .btn-reset { background: var(--bg3); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); border-radius: 10px; padding: 12px 16px; font-size: 13px; cursor: pointer; flex: 0 0 auto; }
+/* SUGGEST PANEL */
+.suggest-panel{
+  margin:8px 12px;
+  border-radius:18px;
+  padding:16px;
+  text-align:center;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  transition:all 0.3s;
+  position:relative;
+  overflow:hidden;
+}
+.suggest-panel::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--b),var(--gold),var(--p));
+  border-radius:18px 18px 0 0;
+}
+.suggest-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;}
+.suggest-rec{font-size:42px;font-weight:900;letter-spacing:2px;line-height:1;}
+.suggest-rec.b{color:var(--b);}
+.suggest-rec.p{color:var(--p);}
+.suggest-rec.wait{font-size:24px;color:var(--text2);}
+.suggest-pattern{font-size:13px;margin-top:6px;color:var(--gold);font-weight:500;}
+.suggest-reason{font-size:12px;color:var(--text2);margin-top:3px;}
+.confidence-row{display:flex;gap:8px;margin-top:10px;justify-content:center;}
+.conf-chip{font-size:12px;padding:3px 10px;border-radius:20px;font-weight:500;}
+.conf-chip.b{background:rgba(61,142,240,0.15);color:var(--b);border:1px solid rgba(61,142,240,0.3);}
+.conf-chip.p{background:rgba(232,69,69,0.15);color:var(--p);border:1px solid rgba(232,69,69,0.3);}
+.conf-chip.g{background:rgba(245,200,66,0.15);color:var(--gold);border:1px solid rgba(245,200,66,0.3);}
 
-  /* Stats */
-  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
-  .stats-grid2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
-  .stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 10px; text-align: center; }
-  .stat-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
-  .stat-val { font-size: 22px; font-weight: 700; }
-  .stat-val.b { color: var(--banker); }
-  .stat-val.p { color: var(--player); }
-  .stat-val.t { color: var(--tie); }
-  .stat-val.g { color: var(--gold); }
+/* STAT ROW */
+.stat-row{display:flex;gap:6px;margin:8px 12px;}
+.stat-box{flex:1;background:var(--bg2);border-radius:12px;padding:10px 6px;text-align:center;border:1px solid var(--border);}
+.stat-num{font-size:20px;font-weight:700;}
+.stat-num.b{color:var(--b);}
+.stat-num.p{color:var(--p);}
+.stat-num.t{color:var(--t);}
+.stat-num.g{color:var(--gold);}
+.stat-lbl{font-size:10px;color:var(--text2);margin-top:2px;}
 
-  /* Suggestion box */
-  .suggest { background: var(--bg2); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; border: 1px solid var(--border); position: relative; overflow: hidden; }
-  .suggest::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--gold); border-radius: 4px 0 0 4px; }
-  .suggest-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-  .suggest-main { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-  .suggest-main.b { color: var(--banker); }
-  .suggest-main.p { color: var(--player); }
-  .suggest-reason { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
-  .history-chips { display: flex; gap: 4px; flex-wrap: wrap; }
-  .chip { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
-  .chip-B { background: var(--banker-bg); color: var(--banker); border: 1px solid rgba(74,158,255,0.3); }
-  .chip-P { background: var(--player-bg); color: var(--player); border: 1px solid rgba(255,107,107,0.3); }
-  .chip-T { background: var(--tie-bg); color: var(--tie); border: 1px solid rgba(81,207,102,0.3); }
-  .chip-arrow { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 16px; }
+/* HISTORY STRIP */
+.history-wrap{margin:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.history-inner{display:flex;gap:5px;padding:4px 0 4px 2px;min-width:max-content;}
+.hchip{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.hchip.B{background:rgba(61,142,240,0.2);color:var(--b);border:2px solid var(--b);}
+.hchip.P{background:rgba(232,69,69,0.2);color:var(--p);border:2px solid var(--p);}
+.hchip.T{background:rgba(48,196,94,0.2);color:var(--t);border:2px solid var(--t);}
+.hchip.arrow{background:none;border:none;color:var(--gold);font-size:18px;}
+.hchip.next{outline:3px solid var(--gold);outline-offset:2px;}
 
-  /* Road sections */
-  .section-title { font-size: 12px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-  .road-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-bottom: 12px; overflow-x: auto; }
-  .big-road { display: flex; gap: 3px; min-height: calc(var(--cell) + 4px); flex-wrap: wrap; }
-  .br-col { display: flex; flex-direction: column; gap: 3px; }
-  .br-cell { width: var(--cell); height: var(--cell); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-  .br-B { background: var(--banker-bg); color: var(--banker); border: 2px solid var(--banker); }
-  .br-P { background: var(--player-bg); color: var(--player); border: 2px solid var(--player); }
-  .br-T { background: var(--tie-bg); color: var(--tie); border: 2px solid var(--tie); }
+/* BIG ROAD */
+.section-hdr{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;padding:4px 14px 4px;display:flex;justify-content:space-between;align-items:center;}
+.road-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 12px 8px;border-radius:14px;background:var(--bg2);border:1px solid var(--border);padding:10px;}
+.big-road-inner{display:flex;gap:4px;min-height:36px;}
+.br-col{display:flex;flex-direction:column;gap:4px;}
+.brc{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.brc.B{background:rgba(61,142,240,0.2);color:var(--b);border:2px solid var(--b);}
+.brc.P{background:rgba(232,69,69,0.2);color:var(--p);border:2px solid var(--p);}
+.brc.T{background:rgba(48,196,94,0.2);color:var(--t);border:2px solid var(--t);}
+.brc.tie-mark{outline:2px solid var(--t);outline-offset:2px;}
 
-  .derived-row { display: flex; gap: 3px; min-height: 20px; flex-wrap: wrap; }
-  .dc { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; }
-  .dc-same { background: var(--banker-bg); border: 1.5px solid var(--banker); }
-  .dc-diff { background: var(--player-bg); border: 1.5px solid var(--player); }
+/* DERIVED ROADS */
+.derived-wrap{margin:0 12px 8px;border-radius:14px;background:var(--bg2);border:1px solid var(--border);padding:8px 10px;}
+.derived-inner{display:flex;flex-wrap:wrap;gap:3px;min-height:14px;}
+.dc{width:16px;height:16px;border-radius:50%;flex-shrink:0;}
+.dc.same{background:rgba(61,142,240,0.25);border:1.5px solid var(--b);}
+.dc.diff{background:rgba(232,69,69,0.25);border:1.5px solid var(--p);}
 
-  .sep { height: 1px; background: var(--border); margin: 12px 0; }
-  .empty { color: var(--text2); font-size: 12px; text-align: center; padding: 8px 0; }
+/* BIG BUTTONS */
+.btn-area{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 12px;}
+.big-btn{
+  border:none;border-radius:18px;
+  padding:22px 10px;
+  font-size:18px;font-weight:800;
+  cursor:pointer;letter-spacing:1px;
+  transition:transform 0.1s,box-shadow 0.1s;
+  position:relative;overflow:hidden;
+}
+.big-btn:active{transform:scale(0.96);}
+.big-btn.B{
+  background:linear-gradient(160deg,#1a4a8a,#3d8ef0);
+  color:#fff;
+  box-shadow:0 4px 20px var(--b-glow);
+}
+.big-btn.P{
+  background:linear-gradient(160deg,#8a1a1a,#e84545);
+  color:#fff;
+  box-shadow:0 4px 20px var(--p-glow);
+}
+.big-btn-icon{display:block;font-size:28px;margin-bottom:4px;}
+.btn-row2{display:flex;gap:8px;margin:0 12px 12px;}
+.sm-btn{flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer;}
+.sm-btn.tie{color:var(--t);border-color:rgba(48,196,94,0.3);}
+.sm-btn.undo{color:var(--text2);}
+.sm-btn.rst{color:var(--p);}
 
-  /* Win rate bar */
-  .rate-bar-wrap { margin-top: 8px; }
-  .rate-bar-labels { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
-  .rate-bar-labels .bl { color: var(--banker); }
-  .rate-bar-labels .pl { color: var(--player); }
-  .rate-bar { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-  .rate-bar-inner { height: 100%; background: linear-gradient(90deg, var(--banker), var(--player)); border-radius: 3px; transition: width 0.4s; }
+/* TREND BAR */
+.trend-wrap{margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px 14px;}
+.trend-labels{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:6px;}
+.trend-bar{height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;}
+.trend-fill{height:100%;border-radius:4px;transition:width 0.4s;background:linear-gradient(90deg,var(--b),#7ab8ff);}
 
-  /* Pattern label */
-  .pattern-badge { display: inline-block; font-size: 11px; padding: 2px 10px; border-radius: 20px; background: rgba(255,212,59,0.15); color: var(--gold); border: 1px solid rgba(255,212,59,0.3); margin-bottom: 6px; }
-
-  footer { text-align: center; font-size: 11px; color: var(--text2); margin-top: 20px; line-height: 1.6; }
+.empty-hint{font-size:12px;color:var(--text2);padding:6px 0;text-align:center;}
+footer{text-align:center;font-size:11px;color:var(--text2);padding:12px;line-height:1.7;border-top:1px solid var(--border);margin-top:4px;}
 </style>
 </head>
 <body>
 
-<h1>♠ วิเคราะห์บาคาร่า</h1>
-<p class="subtitle">บันทึกผล → ระบบวิเคราะห์ Pattern + Road Map อัตโนมัติ</p>
-
-<div class="btn-row">
-  <button class="btn btn-B" onclick="add('B')">🔵 Banker</button>
-  <button class="btn btn-P" onclick="add('P')">🔴 Player</button>
-  <button class="btn btn-T" onclick="add('T')">🟢 Tie</button>
-  <button class="btn-undo" onclick="undo()">↩ ย้อน</button>
-  <button class="btn-reset" onclick="reset()">✕ รีเซ็ต</button>
+<div class="hdr">
+  <div class="hdr-title">♠ BACCARAT ANALYZER</div>
+  <div class="hdr-sub">วิเคราะห์ Pattern + Road Map แบบ Real-time</div>
 </div>
 
-<div class="stats-grid">
-  <div class="stat"><div class="stat-label">Banker</div><div class="stat-val b" id="cntB">0</div></div>
-  <div class="stat"><div class="stat-label">Player</div><div class="stat-val p" id="cntP">0</div></div>
-  <div class="stat"><div class="stat-label">Tie</div><div class="stat-val t" id="cntT">0</div></div>
-</div>
-<div class="stats-grid2">
-  <div class="stat"><div class="stat-label">B%</div><div class="stat-val b" id="pctB">-</div></div>
-  <div class="stat"><div class="stat-label">P%</div><div class="stat-val p" id="pctP">-</div></div>
-  <div class="stat"><div class="stat-label">รวม</div><div class="stat-val g" id="cntAll">0</div></div>
-</div>
-
-<div id="rate-section" style="display:none">
-  <div class="rate-bar-wrap" style="margin-bottom:16px; background:var(--bg2); border-radius:12px; padding:12px; border:1px solid var(--border);">
-    <div class="rate-bar-labels"><span class="bl" id="bar-label-b">B 0%</span><span class="pl" id="bar-label-p">P 0%</span></div>
-    <div class="rate-bar"><div class="rate-bar-inner" id="rate-bar-fill" style="width:50%"></div></div>
-  </div>
-</div>
-
-<div class="suggest" id="suggest-box">
-  <div class="suggest-label">แนวทางแนะนำ</div>
-  <div class="suggest-main" id="sug-main">— บันทึกผลอย่างน้อย 3 ไม้ —</div>
+<!-- SUGGEST -->
+<div class="suggest-panel" id="sug-panel">
+  <div class="suggest-label">ไม้ถัดไปแนะนำ</div>
+  <div class="suggest-rec wait" id="sug-rec">กดบันทึกผล</div>
+  <div class="suggest-pattern" id="sug-pattern"></div>
   <div class="suggest-reason" id="sug-reason"></div>
-  <div id="pattern-badge-wrap"></div>
-  <div class="history-chips" id="history-chips"></div>
+  <div class="confidence-row" id="sug-chips"></div>
 </div>
 
-<div class="section-title">Big Road</div>
-<div class="road-wrap">
-  <div class="big-road" id="big-road"><span class="empty">ยังไม่มีข้อมูล</span></div>
+<!-- STATS -->
+<div class="stat-row">
+  <div class="stat-box"><div class="stat-num b" id="cnt-b">0</div><div class="stat-lbl">Banker</div></div>
+  <div class="stat-box"><div class="stat-num p" id="cnt-p">0</div><div class="stat-lbl">Player</div></div>
+  <div class="stat-box"><div class="stat-num t" id="cnt-t">0</div><div class="stat-lbl">Tie</div></div>
+  <div class="stat-box"><div class="stat-num g" id="cnt-all">0</div><div class="stat-lbl">รวม</div></div>
 </div>
 
-<div class="sep"></div>
-
-<div class="section-title">Big Eye Boy</div>
-<div class="road-wrap">
-  <div class="derived-row" id="beb-road"><span class="empty">ต้องการข้อมูลอย่างน้อย 2 คอลัมน์</span></div>
+<!-- TREND BAR -->
+<div class="trend-wrap" id="trend-wrap" style="display:none">
+  <div class="trend-labels">
+    <span style="color:var(--b)" id="tl-b">B 0%</span>
+    <span style="color:var(--p)" id="tl-p">P 0%</span>
+  </div>
+  <div class="trend-bar"><div class="trend-fill" id="trend-fill" style="width:50%"></div></div>
 </div>
 
-<div class="section-title">Small Road</div>
-<div class="road-wrap">
-  <div class="derived-row" id="small-road"><span class="empty">ต้องการข้อมูลอย่างน้อย 3 คอลัมน์</span></div>
+<!-- HISTORY -->
+<div class="section-hdr"><span>ประวัติล่าสุด</span><span id="hist-count" style="color:var(--b)"></span></div>
+<div class="history-wrap"><div class="history-inner" id="history-inner"><span class="empty-hint">ยังไม่มีข้อมูล</span></div></div>
+
+<!-- BIG ROAD -->
+<div class="section-hdr"><span>Big Road</span></div>
+<div class="road-scroll"><div class="big-road-inner" id="big-road"><span class="empty-hint">ยังไม่มีข้อมูล</span></div></div>
+
+<!-- DERIVED ROADS -->
+<div class="section-hdr"><span>Big Eye Boy</span></div>
+<div class="derived-wrap"><div class="derived-inner" id="beb"><span class="empty-hint">ต้องการ 2 คอลัมน์+</span></div></div>
+
+<div class="section-hdr"><span>Small Road</span></div>
+<div class="derived-wrap"><div class="derived-inner" id="small"><span class="empty-hint">ต้องการ 3 คอลัมน์+</span></div></div>
+
+<div class="section-hdr"><span>Cockroach Road</span></div>
+<div class="derived-wrap"><div class="derived-inner" id="cock"><span class="empty-hint">ต้องการ 4 คอลัมน์+</span></div></div>
+
+<!-- BUTTONS -->
+<div class="btn-area">
+  <button class="big-btn B" onclick="add('B')"><span class="big-btn-icon">🔵</span>BANKER</button>
+  <button class="big-btn P" onclick="add('P')"><span class="big-btn-icon">🔴</span>PLAYER</button>
+</div>
+<div class="btn-row2">
+  <button class="sm-btn tie" onclick="add('T')">🟢 TIE</button>
+  <button class="sm-btn undo" onclick="undo()">↩ ย้อน</button>
+  <button class="sm-btn rst" onclick="reset()">✕ รีเซ็ต</button>
 </div>
 
-<div class="section-title">Cockroach Road</div>
-<div class="road-wrap">
-  <div class="derived-row" id="cock-road"><span class="empty">ต้องการข้อมูลอย่างน้อย 4 คอลัมน์</span></div>
-</div>
-
-<footer>
-  ⚠️ แอปนี้ช่วย track pattern และสถิติเท่านั้น<br>
-  ผลแต่ละไม้เป็นเหตุการณ์อิสระ ไม่มีระบบใดการันตีผลได้<br>
-  เล่นอย่างมีสติ รู้จักหยุด
-</footer>
+<footer>⚠️ ใช้สำหรับ track pattern เท่านั้น<br>ผลแต่ละไม้เป็นอิสระ ไม่มีระบบใดการันตีผล<br>เล่นอย่างมีสติ รู้จักหยุด</footer>
 
 <script>
 let results = [];
 
-function add(v) { results.push(v); render(); }
-function undo() { if (results.length) { results.pop(); render(); } }
-function reset() { if (confirm('รีเซ็ตข้อมูลทั้งหมด?')) { results = []; render(); } }
+function add(v){ results.push(v); render(); }
+function undo(){ if(results.length){ results.pop(); render(); } }
+function reset(){ if(confirm('รีเซ็ตข้อมูลทั้งหมด?')){ results=[]; render(); } }
 
-function buildBigRoad(arr) {
-  const cols = [];
-  let col = [];
-  let last = null;
-  for (const r of arr) {
-    if (r === 'T') {
-      if (col.length) col[col.length - 1].ties = (col[col.length - 1].ties || 0) + 1;
-      continue;
-    }
-    if (r !== last) {
-      if (col.length) cols.push(col);
-      col = [{ v: r, ties: 0 }];
-      last = r;
-    } else {
-      col.push({ v: r, ties: 0 });
-    }
+/* ─── Big Road ─── */
+function buildBigRoad(arr){
+  const cols=[]; let col=[]; let last=null;
+  for(const r of arr){
+    if(r==='T'){ if(col.length) col[col.length-1].ties=(col[col.length-1].ties||0)+1; continue; }
+    if(r!==last){ if(col.length) cols.push(col); col=[{v:r,ties:0}]; last=r; }
+    else col.push({v:r,ties:0});
   }
-  if (col.length) cols.push(col);
+  if(col.length) cols.push(col);
   return cols;
 }
 
-function getBEB(bigRoad) {
-  const res = [];
-  for (let c = 1; c < bigRoad.length; c++) {
-    const cur = bigRoad[c];
-    const prev = bigRoad[c - 1];
-    const ref = bigRoad[c - 2];
-    for (let r = 0; r < cur.length; r++) {
-      if (r === 0) {
-        res.push(ref ? (cur.length === prev.length ? 'same' : 'diff') : 'diff');
-      } else {
-        res.push(prev[r] !== undefined ? 'same' : 'diff');
-      }
+/* ─── Derived Roads ─── */
+function getBEB(br){
+  const res=[];
+  for(let c=1;c<br.length;c++){
+    const cur=br[c], prev=br[c-1], ref=br[c-2];
+    for(let r=0;r<cur.length;r++){
+      if(r===0) res.push(ref?(cur.length===prev.length?'same':'diff'):'diff');
+      else res.push(prev[r]!==undefined?'same':'diff');
+    }
+  }
+  return res;
+}
+function getSmall(br){
+  const res=[];
+  for(let c=2;c<br.length;c++){
+    const cur=br[c],ref=br[c-2];
+    for(let r=0;r<cur.length;r++){
+      if(r===0) res.push(ref.length===br[c-1].length?'same':'diff');
+      else res.push(ref[r]!==undefined?'same':'diff');
+    }
+  }
+  return res;
+}
+function getCock(br){
+  const res=[];
+  for(let c=3;c<br.length;c++){
+    const cur=br[c],ref=br[c-3];
+    for(let r=0;r<cur.length;r++){
+      if(r===0) res.push(ref.length===br[c-1].length?'same':'diff');
+      else res.push(ref[r]!==undefined?'same':'diff');
     }
   }
   return res;
 }
 
-function getSmall(bigRoad) {
-  const res = [];
-  for (let c = 2; c < bigRoad.length; c++) {
-    const cur = bigRoad[c];
-    const ref = bigRoad[c - 2];
-    for (let r = 0; r < cur.length; r++) {
-      if (r === 0) res.push(ref.length === bigRoad[c - 1].length ? 'same' : 'diff');
-      else res.push(ref[r] !== undefined ? 'same' : 'diff');
-    }
-  }
-  return res;
-}
+/* ─── Pattern Detection ─── */
+function analyze(nt){
+  if(nt.length<3) return null;
+  const n=nt.length;
+  const last=nt[n-1];
+  let streak=1;
+  for(let i=n-2;i>=0;i--){ if(nt[i]===last) streak++; else break; }
 
-function getCock(bigRoad) {
-  const res = [];
-  for (let c = 3; c < bigRoad.length; c++) {
-    const cur = bigRoad[c];
-    const ref = bigRoad[c - 3];
-    for (let r = 0; r < cur.length; r++) {
-      if (r === 0) res.push(ref.length === bigRoad[c - 1].length ? 'same' : 'diff');
-      else res.push(ref[r] !== undefined ? 'same' : 'diff');
-    }
-  }
-  return res;
-}
+  // Ping-Pong: สลับทุกไม้
+  const last8=nt.slice(-8);
+  const sw=last8.reduce((a,v,i)=>i>0&&v!==last8[i-1]?a+1:a,0);
+  const isPP=last8.length>=4 && sw>=last8.length-1;
 
-function renderBigRoad(cols) {
-  const el = document.getElementById('big-road');
-  if (!cols.length) { el.innerHTML = '<span class="empty">ยังไม่มีข้อมูล</span>'; return; }
-  el.innerHTML = '';
-  for (const col of cols) {
-    const colDiv = document.createElement('div');
-    colDiv.className = 'br-col';
-    for (const cell of col) {
-      const d = document.createElement('div');
-      d.className = 'br-cell br-' + cell.v;
-      d.textContent = cell.v;
-      if (cell.ties > 0) d.title = 'Tie x' + cell.ties;
-      colDiv.appendChild(d);
-    }
-    el.appendChild(colDiv);
-  }
-}
+  // Chop: สลับ 2-2
+  const last6=nt.slice(-6);
+  let chopScore=0;
+  for(let i=2;i<last6.length;i++) if(last6[i]===last6[i-2]) chopScore++;
+  const isChop=chopScore>=3;
 
-function renderDerived(id, data, minMsg) {
-  const el = document.getElementById(id);
-  if (!data.length) { el.innerHTML = '<span class="empty">' + minMsg + '</span>'; return; }
-  el.innerHTML = '';
-  for (const v of data) {
-    const d = document.createElement('div');
-    d.className = 'dc dc-' + v;
-    el.appendChild(d);
-  }
-}
+  const bPct=nt.filter(r=>r==='B').length/n*100;
+  const pPct=100-bPct;
 
-function detectPattern(nonTie) {
-  if (nonTie.length < 4) return null;
-  const last6 = nonTie.slice(-6);
-  const switches = last6.reduce((a, v, i) => i > 0 && v !== last6[i - 1] ? a + 1 : a, 0);
-  if (switches >= last6.length - 1) return 'ping-pong';
+  let rec,pattern,reason,conf;
 
-  let streak = 1;
-  const last = nonTie[nonTie.length - 1];
-  for (let i = nonTie.length - 2; i >= 0; i--) {
-    if (nonTie[i] === last) streak++;
-    else break;
-  }
-  if (streak >= 4) return 'long-streak';
-  if (streak >= 2) return 'streak';
-  return 'neutral';
-}
-
-function getSuggestion(nonTie) {
-  if (nonTie.length < 3) return null;
-  const total = nonTie.length;
-  const bCount = nonTie.filter(r => r === 'B').length;
-  const pCount = nonTie.filter(r => r === 'P').length;
-  const bPct = bCount / total * 100;
-  const pPct = pCount / total * 100;
-
-  let streak = 1;
-  const lastVal = nonTie[nonTie.length - 1];
-  for (let i = nonTie.length - 2; i >= 0; i--) {
-    if (nonTie[i] === lastVal) streak++;
-    else break;
-  }
-
-  const last6 = nonTie.slice(-6);
-  const switches = last6.reduce((a, v, i) => i > 0 && v !== last6[i - 1] ? a + 1 : a, 0);
-  const isPP = last6.length >= 4 && switches >= last6.length - 1;
-
-  let rec, reason, patternLabel;
-
-  if (isPP) {
-    rec = lastVal === 'B' ? 'P' : 'B';
-    reason = 'รูปแบบ Ping-Pong ชัดเจน → แนะนำสลับฝั่ง';
-    patternLabel = '🔀 Ping-Pong Pattern';
-  } else if (streak >= 4) {
-    rec = lastVal;
-    reason = `เส้น ${lastVal === 'B' ? 'Banker' : 'Player'} ยาว ${streak} ไม้ → ตามเส้น`;
-    patternLabel = `🔥 Long Streak (${streak} ไม้)`;
-  } else if (streak >= 2) {
-    rec = lastVal;
-    reason = `เส้น ${lastVal === 'B' ? 'Banker' : 'Player'} ${streak} ไม้ → ตามเส้น`;
-    patternLabel = `📈 Streak (${streak} ไม้)`;
+  if(streak>=5){
+    rec=last; pattern='🔥 Dragon'; reason=`เส้น ${last==='B'?'Banker':'Player'} ยาว ${streak} ไม้ → ตามเส้น Dragon`;
+    conf=streak>=7?'แรงมาก':'แรง';
+  } else if(isPP){
+    rec=last==='B'?'P':'B'; pattern='🔀 Ping-Pong'; reason='สลับทุกไม้ → แนะนำสลับฝั่ง';
+    conf='ชัดเจน';
+  } else if(isChop){
+    rec=last==='B'?'P':'B'; pattern='✂️ Chop 2-2'; reason='สลับทุก 2 ไม้ → แนะนำเปลี่ยนฝั่ง';
+    conf='ปานกลาง';
+  } else if(streak>=3){
+    rec=last; pattern=`📈 Streak ${streak}`; reason=`เส้น ${last==='B'?'Banker':'Player'} ${streak} ไม้ → ตามเส้น`;
+    conf='ปานกลาง';
+  } else if(streak>=2){
+    rec=last; pattern='📊 เส้นสั้น'; reason=`${last==='B'?'Banker':'Player'} 2 ไม้ → อาจตามต่อ`;
+    conf='ต่ำ';
   } else {
-    if (bPct > 55) { rec = 'B'; reason = 'Banker นำสถิติชัดเจน'; patternLabel = '📊 สถิตินำ'; }
-    else if (pPct > 55) { rec = 'P'; reason = 'Player นำสถิติชัดเจน'; patternLabel = '📊 สถิตินำ'; }
-    else { rec = 'B'; reason = 'สถิติใกล้เคียง → Banker ได้เปรียบเล็กน้อยระยะยาว'; patternLabel = '⚖️ สมดุล'; }
+    if(bPct>57){ rec='B'; pattern='📊 B นำสถิติ'; reason='Banker มาเยอะกว่า'; conf='สถิติ'; }
+    else if(pPct>57){ rec='P'; pattern='📊 P นำสถิติ'; reason='Player มาเยอะกว่า'; conf='สถิติ'; }
+    else { rec='B'; pattern='⚖️ สมดุล'; reason='สถิติใกล้เคียง → Banker ได้เปรียบเล็กน้อย'; conf='ต่ำ'; }
   }
 
-  return { rec, reason, patternLabel, streak, lastVal, bPct, pPct };
+  return {rec,pattern,reason,conf,streak,bPct,pPct,last};
 }
 
-function render() {
-  const cB = results.filter(r => r === 'B').length;
-  const cP = results.filter(r => r === 'P').length;
-  const cT = results.filter(r => r === 'T').length;
-  const total = results.length;
-  const nonTie = results.filter(r => r !== 'T');
-  const nt = nonTie.length;
+/* ─── Render ─── */
+function render(){
+  const cB=results.filter(r=>r==='B').length;
+  const cP=results.filter(r=>r==='P').length;
+  const cT=results.filter(r=>r==='T').length;
+  const tot=results.length;
+  const nt=results.filter(r=>r!=='T');
 
-  document.getElementById('cntB').textContent = cB;
-  document.getElementById('cntP').textContent = cP;
-  document.getElementById('cntT').textContent = cT;
-  document.getElementById('cntAll').textContent = total;
+  document.getElementById('cnt-b').textContent=cB;
+  document.getElementById('cnt-p').textContent=cP;
+  document.getElementById('cnt-t').textContent=cT;
+  document.getElementById('cnt-all').textContent=tot;
+  document.getElementById('hist-count').textContent=tot>0?tot+' ไม้':'';
 
-  if (nt > 0) {
-    const bP = (cB / nt * 100).toFixed(1);
-    const pP = (cP / nt * 100).toFixed(1);
-    document.getElementById('pctB').textContent = bP + '%';
-    document.getElementById('pctP').textContent = pP + '%';
-    document.getElementById('rate-section').style.display = 'block';
-    document.getElementById('bar-label-b').textContent = 'B ' + bP + '%';
-    document.getElementById('bar-label-p').textContent = 'P ' + pP + '%';
-    document.getElementById('rate-bar-fill').style.width = bP + '%';
+  const ntLen=nt.length;
+  if(ntLen>0){
+    const bP=(cB/ntLen*100).toFixed(1);
+    const pP=(cP/ntLen*100).toFixed(1);
+    document.getElementById('trend-wrap').style.display='block';
+    document.getElementById('tl-b').textContent='B '+bP+'%';
+    document.getElementById('tl-p').textContent='P '+pP+'%';
+    document.getElementById('trend-fill').style.width=bP+'%';
   } else {
-    document.getElementById('pctB').textContent = '-';
-    document.getElementById('pctP').textContent = '-';
-    document.getElementById('rate-section').style.display = 'none';
+    document.getElementById('trend-wrap').style.display='none';
   }
 
-  const bigRoad = buildBigRoad(results);
-  renderBigRoad(bigRoad);
-  renderDerived('beb-road', getBEB(bigRoad), 'ต้องการข้อมูลอย่างน้อย 2 คอลัมน์');
-  renderDerived('small-road', getSmall(bigRoad), 'ต้องการข้อมูลอย่างน้อย 3 คอลัมน์');
-  renderDerived('cock-road', getCock(bigRoad), 'ต้องการข้อมูลอย่างน้อย 4 คอลัมน์');
+  // History
+  const hi=document.getElementById('history-inner');
+  const last20=results.slice(-20);
+  if(!last20.length){ hi.innerHTML='<span class="empty-hint">ยังไม่มีข้อมูล</span>'; }
+  else {
+    const sug=analyze(nt);
+    let html='';
+    last20.forEach(r=>{ html+=`<div class="hchip ${r}">${r}</div>`; });
+    if(sug){ html+=`<div class="hchip arrow">→</div><div class="hchip ${sug.rec} next">${sug.rec}</div>`; }
+    hi.innerHTML=html;
+    // scroll to end
+    document.querySelector('.history-wrap').scrollLeft=9999;
+  }
 
-  const sug = getSuggestion(nonTie);
-  const sMain = document.getElementById('sug-main');
-  const sReason = document.getElementById('sug-reason');
-  const chips = document.getElementById('history-chips');
-  const badgeWrap = document.getElementById('pattern-badge-wrap');
-
-  if (!sug) {
-    sMain.textContent = '— บันทึกผลอย่างน้อย 3 ไม้ —';
-    sMain.className = 'suggest-main';
-    sReason.textContent = '';
-    chips.innerHTML = '';
-    badgeWrap.innerHTML = '';
-  } else {
-    sMain.textContent = sug.rec === 'B' ? '🔵 Banker' : '🔴 Player';
-    sMain.className = 'suggest-main ' + (sug.rec === 'B' ? 'b' : 'p');
-    sReason.textContent = sug.reason;
-    badgeWrap.innerHTML = '<span class="pattern-badge">' + sug.patternLabel + '</span>';
-
-    chips.innerHTML = '';
-    const last12 = results.slice(-12);
-    for (const r of last12) {
-      const c = document.createElement('div');
-      c.className = 'chip chip-' + r;
-      c.textContent = r;
-      chips.appendChild(c);
+  // Big Road
+  const br=buildBigRoad(results);
+  const brEl=document.getElementById('big-road');
+  if(!br.length){ brEl.innerHTML='<span class="empty-hint">ยังไม่มีข้อมูล</span>'; }
+  else {
+    let h='';
+    for(const col of br){
+      h+='<div class="br-col">';
+      for(const cell of col) h+=`<div class="brc ${cell.v}${cell.ties>0?' tie-mark':''}">${cell.v}</div>`;
+      h+='</div>';
     }
-    const arrow = document.createElement('div');
-    arrow.className = 'chip-arrow';
-    arrow.textContent = '→';
-    chips.appendChild(arrow);
-    const next = document.createElement('div');
-    next.className = 'chip chip-' + sug.rec;
-    next.style.cssText = 'outline: 2px solid ' + (sug.rec === 'B' ? 'var(--banker)' : 'var(--player)') + '; outline-offset: 2px;';
-    next.textContent = sug.rec;
-    chips.appendChild(next);
+    brEl.innerHTML=h;
+    brEl.parentElement.scrollLeft=9999;
+  }
+
+  // Derived
+  function renderD(id,data,msg){
+    const el=document.getElementById(id);
+    if(!data.length){ el.innerHTML='<span class="empty-hint">'+msg+'</span>'; return; }
+    el.innerHTML=data.map(v=>`<div class="dc ${v}"></div>`).join('');
+  }
+  renderD('beb',getBEB(br),'ต้องการ 2 คอลัมน์+');
+  renderD('small',getSmall(br),'ต้องการ 3 คอลัมน์+');
+  renderD('cock',getCock(br),'ต้องการ 4 คอลัมน์+');
+
+  // Suggestion
+  const sg=analyze(nt);
+  const recEl=document.getElementById('sug-rec');
+  const ptEl=document.getElementById('sug-pattern');
+  const rsEl=document.getElementById('sug-reason');
+  const chEl=document.getElementById('sug-chips');
+
+  if(!sg){
+    recEl.textContent='บันทึกอย่างน้อย 3 ไม้'; recEl.className='suggest-rec wait';
+    ptEl.textContent=''; rsEl.textContent=''; chEl.innerHTML='';
+  } else {
+    recEl.textContent=sg.rec==='B'?'🔵 BANKER':'🔴 PLAYER';
+    recEl.className='suggest-rec '+(sg.rec==='B'?'b':'p');
+    ptEl.textContent=sg.pattern;
+    rsEl.textContent=sg.reason;
+    chEl.innerHTML=
+      `<span class="conf-chip b">B ${sg.bPct.toFixed(1)}%</span>`+
+      `<span class="conf-chip p">P ${sg.pPct.toFixed(1)}%</span>`+
+      `<span class="conf-chip g">ความเชื่อมั่น: ${sg.conf}</span>`;
   }
 }
 
