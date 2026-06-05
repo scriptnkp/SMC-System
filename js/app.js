@@ -10,14 +10,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   await Promise.all([
     loadMaterials(),
-    initDatabase() // ดึงข้อมูลจาก GAS Web App
+    initDatabase() 
   ]);
   
   navigateTo('dashboard');
   setTodayDate();
   loadSettings();
   
-  // นำรูปโลโก้มาโชว์ในตั้งค่า ถ้ามีเก็บไว้แล้ว
   const s = getSettings();
   if(s.logoUrl) {
     const imgEl = document.getElementById('logo-preview-img');
@@ -205,18 +204,12 @@ function calcTotals() {
   const switchCost = parseFloat(s.switchCost) || 570;
   const svc30 = parseFloat(s.service30min) || 285;
 
-  // Material total (user price sum)
   const matTotal = br1MaterialRows.reduce((sum, r) => sum + (calcUserPrice(r.basePrice) * r.qty), 0);
-
-  // Service cost = 2x 30min
   const serviceCost = svc30 * 2;
-
-  // Switch cost fixed
-  const totalPreTax = switchCost + serviceCost + matTotal * 1.31; // +31% handling
+  const totalPreTax = switchCost + serviceCost + matTotal * 1.31; 
   const tax = totalPreTax * 0.07;
   const grandTotal = totalPreTax + tax;
 
-  // Display
   setText('calc-switch', fmt(switchCost));
   setText('calc-service', fmt(serviceCost));
   setText('calc-mat-total', fmt(matTotal));
@@ -263,7 +256,6 @@ function saveCurrentJob() {
     savedAt: new Date().toISOString()
   };
 
-  // Calc totals
   const matUserTotal = br1MaterialRows.reduce((sum, r) => sum + calcUserPrice(r.basePrice) * r.qty, 0);
   job.matUserTotal = Math.round(matUserTotal * 100) / 100;
   job.matWithHandling = Math.round(matUserTotal * 1.31 * 100) / 100;
@@ -278,7 +270,7 @@ function saveCurrentJob() {
 
   saveJob(job);
   editingJobId = job.id;
-  showToast(editingJobId ? 'บันทึกเรียบร้อยแล้ว' : 'สร้างใบงานใหม่แล้ว', 'success');
+  showToast(editingJobId ? 'บันทึกใบงานเรียบร้อย' : 'สร้างใบงานใหม่เรียบร้อย', 'success');
 }
 
 function val(id) {
@@ -699,7 +691,6 @@ function renderDashboard() {
   setText('dash-month-revenue', fmt(thisMonth.reduce((s, j) => s + (j.grandTotal || 0), 0), 0));
   setText('dash-total-revenue', fmt(jobs.reduce((s, j) => s + (j.grandTotal || 0), 0), 0));
 
-  // By technician
   const techMap = {};
   jobs.forEach(j => {
     const t = j.technician || 'ไม่ระบุ';
@@ -722,7 +713,6 @@ function renderDashboard() {
   document.getElementById('tech-tbody').innerHTML = techRows ||
     '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:16px">ยังไม่มีข้อมูล</td></tr>';
 
-  // Recent jobs
   const recentRows = jobs.slice(0, 8).map(j => `
     <tr>
       <td>${thaiDate(j.date)}</td>
@@ -780,6 +770,8 @@ async function uploadLogoToGAS(input) {
     try {
       const res = await fetch(GAS_URL, {
         method: 'POST',
+        redirect: "follow",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: 'uploadLogo',
           base64: base64,
@@ -790,8 +782,8 @@ async function uploadLogoToGAS(input) {
       
       if (data.success) {
         const s = getSettings();
-        s.logoUrl = data.imageUrl; // อัปเดต State Settings
-        await saveSettings(s);     // บันทึก URL รูปลง Sheets
+        s.logoUrl = data.imageUrl; 
+        await saveSettings(s);     
 
         statusEl.textContent = '✓ อัปโหลดสำเร็จ!';
         statusEl.style.color = '#27ae60';

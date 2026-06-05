@@ -1,6 +1,7 @@
 // ===== js/storage.js =====
 // เชื่อมต่อ Google Apps Script API
 
+// 🔴 Web App URL ของคุณ (อัปเดตล่าสุด)
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxzaxiO9VErx1JeRK1RxFspKNYAKsljlyx5de4MPiAO72JP7GIh7Mr2QGJ5SzwWcABE/exec';
 
 let localJobs = [];
@@ -9,11 +10,11 @@ let localSettings = {};
 // ดึงข้อมูลทั้งหมดจาก Google Sheets เมื่อโหลดหน้าเว็บ
 async function initDatabase() {
   try {
-    const sRes = await fetch(`${GAS_URL}?action=getSettings`);
+    const sRes = await fetch(`${GAS_URL}?action=getSettings`, { redirect: "follow" });
     const sData = await sRes.json();
     localSettings = sData || {};
 
-    const jRes = await fetch(`${GAS_URL}?action=getJobs`);
+    const jRes = await fetch(`${GAS_URL}?action=getJobs`, { redirect: "follow" });
     const jData = await jRes.json();
     // เรียงใบงานล่าสุดขึ้นก่อน
     localJobs = Array.isArray(jData) ? jData.reverse() : [];
@@ -43,6 +44,9 @@ async function saveJob(job) {
   try {
     await fetch(GAS_URL, {
       method: 'POST',
+      redirect: "follow",
+      // ใช้ text/plain เพื่อหลบเลี่ยง Preflight (CORS OPTIONS) ของเบราว์เซอร์
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: 'saveJob', data: job })
     });
   } catch(e) {
@@ -51,11 +55,12 @@ async function saveJob(job) {
   }
 }
 
-// ลบใบงาน (อัปเดตสถานะใน Memory)
+// ลบใบงาน (อัปเดตสถานะใน Memory - หากต้องการลบใน Sheets ด้วยต้องเพิ่ม Endpoint ลบ)
 function deleteJob(id) {
   localJobs = localJobs.filter(j => j.id !== id);
 }
 
+// บันทึกการตั้งค่าระบบและ URL ของโลโก้
 async function saveSettings(s) {
   // รักษา URL ของ Logo เดิมไว้หากไม่ได้อัปเดตใหม่ในรอบนี้
   if(localSettings.logoUrl && !s.logoUrl) s.logoUrl = localSettings.logoUrl;
@@ -64,6 +69,9 @@ async function saveSettings(s) {
   try {
     await fetch(GAS_URL, {
       method: 'POST',
+      redirect: "follow",
+      // ใช้ text/plain เพื่อหลบเลี่ยง Preflight (CORS OPTIONS) ของเบราว์เซอร์
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: 'saveSettings', data: s })
     });
   } catch(e) {
