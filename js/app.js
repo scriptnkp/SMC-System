@@ -244,16 +244,53 @@ function editRecord(rowIndex) {
 
 function showLoader(text) { document.getElementById('loader').style.display = 'flex'; document.getElementById('loaderText').innerText = text; }
 function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+// เอาไปวางทับฟังก์ชัน triggerReportPrint เดิมใน js/app.js ครับ
 function triggerReportPrint(reportType) {
     const items = [];
-    document.querySelectorAll('.item-row').forEach(row => { items.push({ itemName: row.querySelector('.item-select').value, qty: parseFloat(row.querySelector('.item-qty').value) || 1 }); });
+    document.querySelectorAll('.item-row').forEach(row => {
+        const itemVal = row.querySelector('.item-select').value;
+        const qty = parseFloat(row.querySelector('.item-qty').value) || 1;
+        let unitPrice = 0;
+        
+        // ค้นหาราคาพัสดุจาก materialsData เพื่อส่งไปแสดงในตารางรายงาน
+        if (itemVal && materialsData.length > 0) {
+            const itemCode = itemVal.split(' - ')[0];
+            const matchedItem = materialsData.find(m => m['รหัสพัสดุ'] === itemCode);
+            if (matchedItem) {
+                let price = parseFloat(matchedItem['ราคามาตรฐาน']);
+                if (isNaN(price) || price === 0) price = parseFloat(matchedItem['Std_อีสาน']);
+                if (!isNaN(price)) unitPrice = price * 1.4; // บวก 40% ตามกฎ
+            }
+        }
+
+        items.push({
+            itemName: itemVal,
+            qty: qty,
+            unitPrice: unitPrice,
+            totalPrice: unitPrice * qty
+        });
+    });
+
     const currentData = {
-        serviceDate: document.getElementById('serviceDate').value, timeStart: document.getElementById('timeStart').value,
-        timeEnd: document.getElementById('timeEnd').value, totalHours: document.getElementById('totalHoursTxt').innerText,
-        staffName: document.getElementById('staffName').value, customerName: document.getElementById('customerName').value,
-        phone: document.getElementById('phone').value, meterNo: document.getElementById('meterNo').value, br1Info: document.getElementById('br1Info').value,
-        items: items, switchFee: 570, serviceFee: parseFloat(document.getElementById('sumService').innerText.replace(/,/g, '')) || 0,
-        materialsFee: parseFloat(document.getElementById('sumMaterials').innerText.replace(/,/g, '')) || 0, totalBr1: parseFloat(document.getElementById('sumTotal').innerText.replace(/,/g, '')) || 570,
+        serviceDate: document.getElementById('serviceDate').value,
+        timeStart: document.getElementById('timeStart').value,
+        timeEnd: document.getElementById('timeEnd').value,
+        totalHours: document.getElementById('totalHoursTxt').innerText,
+        staffName: document.getElementById('staffName').value,
+        customerName: document.getElementById('customerName').value,
+        phone: document.getElementById('phone').value,
+        meterNo: document.getElementById('meterNo').value,
+        br1Info: document.getElementById('br1Info').value,
+        items: items,
+        switchFee: 570,
+        serviceFee: parseFloat(document.getElementById('sumService').innerText.replace(/,/g, '')) || 0,
+        materialsFee: parseFloat(document.getElementById('sumMaterials').innerText.replace(/,/g, '')) || 0,
+        totalBr1: parseFloat(document.getElementById('sumTotal').innerText.replace(/,/g, '')) || 570,
     };
-    if (reportType === 'BR1') printBR1(currentData); else if (reportType === 'MT1') printMT1(currentData);
+
+    if (reportType === 'BR1') {
+        printBR1(currentData);
+    } else if (reportType === 'MT1') {
+        printMT1(currentData);
+    }
 }
