@@ -1,5 +1,5 @@
 // ==========================================
-// Report Engine: จัดการระบบพิมพ์ PDF (ไม่มี <style> ป้องกันเบราว์เซอร์บล็อก)
+// Report Engine: จัดการระบบพิมพ์ PDF (แก้ไข Syntax Error แล้ว)
 // ==========================================
 
 function printBR1(formData) {
@@ -330,11 +330,12 @@ function printMT1(formData) {
     window.print();
 }
 
+// 🟢 จุดที่ได้รับการแก้ไข Syntax Error แล้ว (เพิ่ม ']')
 function formatThaiDate(dateStr) {
     if (!dateStr) return '................................';
     const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
     const d = new Date(dateStr);
-    return `${d.getDate()} ${months[d.getMonth()} ${d.getFullYear() + 543}`;
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
 }
 
 function BAHTTEXT(num) {
