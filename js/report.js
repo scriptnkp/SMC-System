@@ -1,24 +1,28 @@
 // ==========================================
-// Report Engine: จัด Layout แบบฟอร์ม บร.1 และ มท.1
-// ดึงโครงสร้าง HTML/CSS ต้นฉบับจาก กฟภ. 100%
+// Report Engine: จัดการระบบพิมพ์ PDF (ไม่มี <style> ป้องกันเบราว์เซอร์บล็อก)
 // ==========================================
 
 function printBR1(formData) {
     const printArea = document.getElementById('printArea');
     
+    // จัดการเลขที่ บร.1 ให้ปลอดภัยจากการพิมพ์ตกหล่น
+    const br1Str = formData.br1Info || '';
+    const br1Parts = br1Str.split('/');
+    const br1Book = br1Parts[0] ? br1Parts[0].trim() : '-';
+    const br1No = br1Parts[1] ? br1Parts[1].trim() : br1Book;
+
     // 1. จัดการข้อมูลรายการพัสดุ
     let itemsHtml = '';
     let totalMaterialCost = 0;
 
     formData.items.forEach((item, index) => {
         if(item.itemName) {
-            // แยกรหัส และ ชื่อพัสดุ
             let code = item.itemName.split(' - ')[0] || '';
             let name = item.itemName.split(' - ')[1] || item.itemName;
-            
-            // ถอดราคาฐาน (ก่อนบวก 40%) กลับมาแสดงในช่อง "ราคามาตรฐาน"
-            let basePrice = (item.unitPrice || 0) / 1.4;
-            let rowTotal = item.totalPrice || 0;
+            let unitPrice = parseFloat(item.unitPrice) || 0;
+            let qty = parseFloat(item.qty) || 0;
+            let basePrice = unitPrice / 1.4;
+            let rowTotal = item.totalPrice || (unitPrice * qty);
             totalMaterialCost += rowTotal;
 
             itemsHtml += `
@@ -26,7 +30,7 @@ function printBR1(formData) {
                     <td>${index + 1}</td>
                     <td>${code}</td>
                     <td class="left">${name}</td>
-                    <td>${item.qty}</td>
+                    <td>${qty}</td>
                     <td>${basePrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
                     <td>${rowTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
                     <td></td>
@@ -44,37 +48,15 @@ function printBR1(formData) {
     let next30Min = formData.serviceFee > 285 ? formData.serviceFee - 285 : 0;
     let totalSectionA = formData.switchFee + formData.serviceFee;
 
-    // คำนวณบล็อกสรุปเงิน (Summary Block)
     let sum1 = formData.switchFee;
     let sum2 = formData.serviceFee + formData.materialsFee;
     let sumTotal = sum1 + sum2;
     let vatAmount = sumTotal * 0.07;
     let grandTotal = sumTotal + vatAmount;
 
-    // จัดการเลขที่ บร.1
-    let br1Book = formData.br1Info.split('/')[0] || '-';
-    let br1No = formData.br1Info.split('/')[1] || formData.br1Info;
-
-// 3. สร้าง HTML Template (ไม่นำ <style> มาใส่ในนี้แล้ว)
+    // 3. สร้าง HTML Template
     const htmlContent = `
-        <div id="br1-print-layout">
-            <div class="header-top">
-                <div class="logo-area">
-                <div class="logo-circle"><div class="logo-inner">กฟภ.</div></div>
-                </div>
-                <div class="org-name">การไฟฟ้าส่วนภูมิภาค จังหวัดนครพนม</div>
-                <div class="doc-info">
-                <div><strong>เลขที่ใบสั่งซ่อม :</strong> <span class="badge">${br1No}</span></div>
-                <div>กฟฟ. : กฟจ.นครพนม</div>
-                <div>เจ้าหน้าที่ผู้ประมาณการ : ${formData.staffName}</div>
-                <div>วันที่ : ${formatThaiDate(formData.serviceDate)}</div>
-                </div>
-            </div>
-
-            <!-- ... โค้ดส่วนอื่นๆ คงเดิมทั้งหมด ... -->
-    `;
-
-        <div id="br1-print-layout">
+        <div class="print-doc">
             <div class="header-top">
                 <div class="logo-area">
                 <div class="logo-circle"><div class="logo-inner">กฟภ.</div></div>
@@ -250,10 +232,14 @@ function printBR1(formData) {
     window.print();
 }
 
-
-// โค้ดส่วน printMT1 และ Helper ยังคงเดิม เพื่อความต่อเนื่อง
 function printMT1(formData) {
     const printArea = document.getElementById('printArea');
+    
+    const br1Str = formData.br1Info || '';
+    const br1Parts = br1Str.split('/');
+    const br1Book = br1Parts[0] ? br1Parts[0].trim() : '-';
+    const br1No = br1Parts[1] ? br1Parts[1].trim() : br1Book;
+
     const mt1Section2 = formData.serviceFee + formData.materialsFee; 
     const subTotal = formData.switchFee + mt1Section2; 
     const vat = subTotal * 0.07; 
@@ -294,8 +280,8 @@ function printMT1(formData) {
             <div style="text-indent: 50px; text-align: justify; margin-bottom: 20px;">
                 ด้วยในวันที่ ${formatThaiDate(formData.serviceDate)} เวลา ${formData.timeStart} น. ถึงเวลา ${formData.timeEnd} น.
                 การไฟฟ้าส่วนภูมิภาค จังหวัดนครพนม ได้บริการแก้กระแสไฟฟ้าขัดข้องให้แก่ หมายเลขผู้ใช้ไฟ ${formData.meterNo} 
-                พร้อมออกหลักฐาน ใบบริการแก้ไขกระแสไฟฟ้าขัดข้อง ใบ บร.1 เล่มที่ ${formData.br1Info.split('/')[0] || '.......'} 
-                เลขที่ ${formData.br1Info.split('/')[1] || '.......'} เพื่อเรียกเก็บค่าใช้จ่ายในภายหลังนั้น บัดนี้ การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม
+                พร้อมออกหลักฐาน ใบบริการแก้ไขกระแสไฟฟ้าขัดข้อง ใบ บร.1 เล่มที่ ${br1Book} 
+                เลขที่ ${br1No} เพื่อเรียกเก็บค่าใช้จ่ายในภายหลังนั้น บัดนี้ การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม
                 ได้ตรวจสอบประมาณการแล้วมีค่าใช้จ่าย ดังนี้
             </div>
             <table width="85%" border="0" cellpadding="4" cellspacing="0" align="center" style="margin-bottom: 30px;">
@@ -348,7 +334,7 @@ function formatThaiDate(dateStr) {
     if (!dateStr) return '................................';
     const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
     const d = new Date(dateStr);
-    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+    return `${d.getDate()} ${months[d.getMonth()} ${d.getFullYear() + 543}`;
 }
 
 function BAHTTEXT(num) {

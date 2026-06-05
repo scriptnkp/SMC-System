@@ -10,7 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    
     if(tab === 'form') {
         document.getElementById('formSection').style.display = 'block';
         document.getElementById('dashboardSection').style.display = 'none';
@@ -159,7 +158,7 @@ document.getElementById('serviceForm').addEventListener('submit', function(e) {
 });
 
 function fetchDashboardData() {
-    showLoader('กำลังโหลดประวัติและสรุปผลงาน...');
+    showLoader('กำลังโหลดประวัติ...');
     fetch(API_URL)
     .then(r => r.json())
     .then(result => {
@@ -183,11 +182,7 @@ function renderDashboard() {
 
     let html = '';
     for(const [staff, data] of Object.entries(summary)) {
-        html += `<tr>
-            <td><strong>${staff}</strong></td>
-            <td>${data.count}</td>
-            <td style="color:#28a745; font-weight:bold;">${data.totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-        </tr>`;
+        html += `<tr><td><strong>${staff}</strong></td><td>${data.count}</td><td style="color:#28a745; font-weight:bold;">${data.totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2})}</td></tr>`;
     }
     document.querySelector('#dashboardTable tbody').innerHTML = html || '<tr><td colspan="3" style="text-align:center;">ยังไม่มีข้อมูล</td></tr>';
 }
@@ -197,13 +192,7 @@ function renderHistory() {
     historyData.slice(0, 20).forEach(row => {
         const dateStr = row.ServiceDate ? new Date(row.ServiceDate).toLocaleDateString('th-TH') : '-';
         const total = parseFloat(row.TotalMT1) || 0;
-        html += `<tr>
-            <td>${dateStr}</td>
-            <td>${row.CustomerName}</td>
-            <td>${row.StaffName}</td>
-            <td>${total.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-            <td><button class="btn-sm" onclick="editRecord(${row.rowIndex})">✏️ แก้ไข</button></td>
-        </tr>`;
+        html += `<tr><td>${dateStr}</td><td>${row.CustomerName}</td><td>${row.StaffName}</td><td>${total.toLocaleString('en-US', {minimumFractionDigits: 2})}</td><td><button class="btn-sm" onclick="editRecord(${row.rowIndex})">✏️ แก้ไข</button></td></tr>`;
     });
     document.querySelector('#historyTable tbody').innerHTML = html || '<tr><td colspan="5" style="text-align:center;">ยังไม่มีประวัติ</td></tr>';
 }
@@ -213,7 +202,6 @@ function editRecord(rowIndex) {
     if(!record) return;
 
     switchTab('form'); 
-
     document.getElementById('editRowIndex').value = record.rowIndex;
     document.getElementById('editTimestamp').value = record.Timestamp;
     
@@ -244,53 +232,58 @@ function editRecord(rowIndex) {
 
 function showLoader(text) { document.getElementById('loader').style.display = 'flex'; document.getElementById('loaderText').innerText = text; }
 function hideLoader() { document.getElementById('loader').style.display = 'none'; }
-// เอาไปวางทับฟังก์ชัน triggerReportPrint เดิมใน js/app.js ครับ
+
+// ฟังก์ชันสั่งพิมพ์รายงาน
 function triggerReportPrint(reportType) {
-    const items = [];
-    document.querySelectorAll('.item-row').forEach(row => {
-        const itemVal = row.querySelector('.item-select').value;
-        const qty = parseFloat(row.querySelector('.item-qty').value) || 1;
-        let unitPrice = 0;
-        
-        // ค้นหาราคาพัสดุจาก materialsData เพื่อส่งไปแสดงในตารางรายงาน
-        if (itemVal && materialsData.length > 0) {
-            const itemCode = itemVal.split(' - ')[0];
-            const matchedItem = materialsData.find(m => m['รหัสพัสดุ'] === itemCode);
-            if (matchedItem) {
-                let price = parseFloat(matchedItem['ราคามาตรฐาน']);
-                if (isNaN(price) || price === 0) price = parseFloat(matchedItem['Std_อีสาน']);
-                if (!isNaN(price)) unitPrice = price * 1.4; // บวก 40% ตามกฎ
+    try {
+        const items = [];
+        document.querySelectorAll('.item-row').forEach(row => {
+            const itemVal = row.querySelector('.item-select').value;
+            const qty = parseFloat(row.querySelector('.item-qty').value) || 1;
+            let unitPrice = 0;
+            
+            if (itemVal && materialsData.length > 0) {
+                const itemCode = itemVal.split(' - ')[0];
+                const matchedItem = materialsData.find(m => m['รหัสพัสดุ'] === itemCode);
+                if (matchedItem) {
+                    let price = parseFloat(matchedItem['ราคามาตรฐาน']);
+                    if (isNaN(price) || price === 0) price = parseFloat(matchedItem['Std_อีสาน']);
+                    if (!isNaN(price)) unitPrice = price * 1.4; // บวก 40%
+                }
             }
-        }
 
-        items.push({
-            itemName: itemVal,
-            qty: qty,
-            unitPrice: unitPrice,
-            totalPrice: unitPrice * qty
+            items.push({
+                itemName: itemVal,
+                qty: qty,
+                unitPrice: unitPrice,
+                totalPrice: unitPrice * qty
+            });
         });
-    });
 
-    const currentData = {
-        serviceDate: document.getElementById('serviceDate').value,
-        timeStart: document.getElementById('timeStart').value,
-        timeEnd: document.getElementById('timeEnd').value,
-        totalHours: document.getElementById('totalHoursTxt').innerText,
-        staffName: document.getElementById('staffName').value,
-        customerName: document.getElementById('customerName').value,
-        phone: document.getElementById('phone').value,
-        meterNo: document.getElementById('meterNo').value,
-        br1Info: document.getElementById('br1Info').value,
-        items: items,
-        switchFee: 570,
-        serviceFee: parseFloat(document.getElementById('sumService').innerText.replace(/,/g, '')) || 0,
-        materialsFee: parseFloat(document.getElementById('sumMaterials').innerText.replace(/,/g, '')) || 0,
-        totalBr1: parseFloat(document.getElementById('sumTotal').innerText.replace(/,/g, '')) || 570,
-    };
+        const currentData = {
+            serviceDate: document.getElementById('serviceDate').value,
+            timeStart: document.getElementById('timeStart').value,
+            timeEnd: document.getElementById('timeEnd').value,
+            totalHours: document.getElementById('totalHoursTxt').innerText,
+            staffName: document.getElementById('staffName').value,
+            customerName: document.getElementById('customerName').value,
+            phone: document.getElementById('phone').value,
+            meterNo: document.getElementById('meterNo').value,
+            br1Info: document.getElementById('br1Info').value || '',
+            items: items,
+            switchFee: 570,
+            serviceFee: parseFloat(document.getElementById('sumService').innerText.replace(/,/g, '')) || 0,
+            materialsFee: parseFloat(document.getElementById('sumMaterials').innerText.replace(/,/g, '')) || 0,
+            totalBr1: parseFloat(document.getElementById('sumTotal').innerText.replace(/,/g, '')) || 570,
+        };
 
-    if (reportType === 'BR1') {
-        printBR1(currentData);
-    } else if (reportType === 'MT1') {
-        printMT1(currentData);
+        if (reportType === 'BR1') {
+            printBR1(currentData);
+        } else if (reportType === 'MT1') {
+            printMT1(currentData);
+        }
+    } catch (err) {
+        console.error(err);
+        alert('เกิดข้อผิดพลาดในการสร้างเอกสารพิมพ์ กรุณาตรวจสอบว่ากรอกข้อมูลครบถ้วน');
     }
 }
