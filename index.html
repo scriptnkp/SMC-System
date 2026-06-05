@@ -1,640 +1,415 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-  <base target="_top">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ระบบบันทึกข้อมูลงาน - แดชบอร์ด</title>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <style>
-    :root { 
-      --primary: #3b82f6; --primary-hover: #2563eb;
-      --secondary: #10b981; --secondary-hover: #059669;
-      --danger: #ef4444; --danger-hover: #dc2626;
-      --warning: #f59e0b; --warning-hover: #d97706;
-      --dark: #1e293b; --light: #ffffff;
-      --bg-color: #f1f5f9; --text-main: #334155; --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-    
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Prompt', sans-serif; color: var(--text-main); }
-    body { background-color: var(--bg-color); min-height: 100vh; padding: 20px; }
-    .container { max-width: 100%; margin: 0 auto; }
-    
-    .header { background: var(--light); border-radius: 16px; padding: 20px 25px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: 15px; border: 1px solid var(--border-color); }
-    .header h2 { color: var(--dark); font-weight: 600; display: flex; align-items: center; gap: 10px; font-size: 22px; margin: 0;}
-    .header h2 i { color: var(--primary); }
-    
-    .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .stat-card { background: var(--light); padding: 20px; border-radius: 16px; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-color); transition: transform 0.2s;}
-    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-    .stat-icon { background: #eff6ff; color: var(--primary); width: 60px; height: 60px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; }
-    .stat-info { display: flex; flex-direction: column; }
-    .stat-label { font-size: 14px; color: var(--text-muted); font-weight: 500; }
-    .stat-value { font-size: 24px; font-weight: 600; color: var(--dark); }
-    
-    .content-card { background: var(--light); border-radius: 16px; padding: 20px; box-shadow: var(--shadow-sm); overflow-x: auto; border: 1px solid var(--border-color); }
-    .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);}
-    .search-input { padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; width: 100%; outline: none; transition: all 0.3s; background: white;}
-    .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
-    
-    /* ปรับขนาดตารางให้รองรับคอลัมน์ที่เพิ่มขึ้น */
-    table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1000px; table-layout: auto; }
-    th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); text-align: left; font-size: 13px; vertical-align: top; word-wrap: break-word; word-break: break-word; white-space: normal; }
-    th { background: #f8fafc; font-weight: 600; color: var(--text-muted); position: sticky; top: 0; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
-    tr:nth-child(even) td { background: #fbfcfd; }
-    tr:hover td { background: #f1f5f9; }
-    td:first-child, th:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
-    td:last-child, th:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
-    
-    th:nth-child(3) { min-width: 150px; } /* ชื่องาน */
-    th:nth-child(6) { min-width: 160px; } /* อุปกรณ์ (ถูกขยับลำดับเพราะเพิ่มทีมงาน) */
-    th:nth-child(10) { min-width: 120px; } /* พิกัด */
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>วิเคราะห์บาคาร่า</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d0f;
+    --bg2: #16161a;
+    --bg3: #1e1e24;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0f0f0;
+    --text2: #999;
+    --banker: #4a9eff;
+    --banker-dark: #1a3a5c;
+    --banker-bg: rgba(74,158,255,0.12);
+    --player: #ff6b6b;
+    --player-dark: #8B1a1a;
+    --player-bg: rgba(255,107,107,0.12);
+    --tie: #51cf66;
+    --tie-bg: rgba(81,207,102,0.12);
+    --gold: #ffd43b;
+    --cell: 30px;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    min-height: 100vh;
+    padding: 16px;
+  }
 
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); overflow-y: auto; padding: 20px; }
-    .modal-content { background: var(--light); margin: 2vh auto; padding: 30px; width: 100%; max-width: 850px; border-radius: 20px; position: relative; max-height: 90vh; display: flex; flex-direction: column; box-shadow: var(--shadow-lg); }
-    .modal-body { overflow-y: auto; padding-right: 10px; margin-bottom: 15px; margin-top: 10px; }
-    
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
-    .form-group label { font-weight: 500; font-size: 14px; color: var(--text-main); margin-bottom: 6px; display: block; }
-    
-    .equip-section { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px dashed #cbd5e1; margin: 20px 0; }
-    .equipment-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);}
-    .equip-col { flex: 1; min-width: 140px; }
-    .equip-col-sm { flex: 0 0 100px; }
-    
-    .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
-    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
-    .btn:active { transform: translateY(0); }
-    .btn-add, .btn-primary { background: var(--primary); color: white; }
-    .btn-add:hover, .btn-primary:hover { background: var(--primary-hover); }
-    .btn-success { background: var(--secondary); color: white; }
-    .btn-success:hover { background: var(--secondary-hover); }
-    .btn-warning { background: #fffbeb; color: var(--warning); border: 1px solid #fde68a; }
-    .btn-warning:hover { background: #fef3c7; }
-    .btn-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
-    .btn-danger:hover { background: #fee2e2; }
-    .btn-light { background: white; color: var(--text-main); border: 1px solid var(--border-color); }
-    .btn-light:hover { background: #f8fafc; }
-    
-    .toast { position: fixed; bottom: 30px; right: 30px; padding: 15px 25px; border-radius: 10px; color: white; z-index: 2000; box-shadow: var(--shadow-lg); display: none; font-weight: 500; }
-    
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    
-    @media (max-width: 768px) {
-      .modal-content { margin: 0; height: 100%; max-height: 100vh; border-radius: 0; padding: 20px;}
-      .equipment-row { flex-direction: column; align-items: stretch; }
-      .equip-col-sm { flex: 1; }
-      .filter-bar { flex-direction: column; align-items: stretch; }
-    }
-  </style>
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+    color: var(--gold);
+  }
+  .subtitle { text-align: center; font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+
+  /* Input buttons */
+  .btn-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .btn { border: none; border-radius: 10px; padding: 12px 0; font-size: 15px; font-weight: 700; cursor: pointer; flex: 1; min-width: 80px; letter-spacing: 0.5px; transition: transform 0.1s, opacity 0.1s; }
+  .btn:active { transform: scale(0.96); opacity: 0.85; }
+  .btn-B { background: linear-gradient(135deg, #1a5fa0, #4a9eff); color: #fff; }
+  .btn-P { background: linear-gradient(135deg, #a01a1a, #ff6b6b); color: #fff; }
+  .btn-T { background: linear-gradient(135deg, #1a6b2a, #51cf66); color: #fff; }
+  .btn-undo { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 16px; font-size: 13px; cursor: pointer; flex: 0 0 auto; }
+  .btn-reset { background: var(--bg3); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); border-radius: 10px; padding: 12px 16px; font-size: 13px; cursor: pointer; flex: 0 0 auto; }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .stats-grid2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 10px; text-align: center; }
+  .stat-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .stat-val { font-size: 22px; font-weight: 700; }
+  .stat-val.b { color: var(--banker); }
+  .stat-val.p { color: var(--player); }
+  .stat-val.t { color: var(--tie); }
+  .stat-val.g { color: var(--gold); }
+
+  /* Suggestion box */
+  .suggest { background: var(--bg2); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+  .suggest::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--gold); border-radius: 4px 0 0 4px; }
+  .suggest-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .suggest-main { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .suggest-main.b { color: var(--banker); }
+  .suggest-main.p { color: var(--player); }
+  .suggest-reason { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+  .history-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .chip { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+  .chip-B { background: var(--banker-bg); color: var(--banker); border: 1px solid rgba(74,158,255,0.3); }
+  .chip-P { background: var(--player-bg); color: var(--player); border: 1px solid rgba(255,107,107,0.3); }
+  .chip-T { background: var(--tie-bg); color: var(--tie); border: 1px solid rgba(81,207,102,0.3); }
+  .chip-arrow { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 16px; }
+
+  /* Road sections */
+  .section-title { font-size: 12px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .road-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-bottom: 12px; overflow-x: auto; }
+  .big-road { display: flex; gap: 3px; min-height: calc(var(--cell) + 4px); flex-wrap: wrap; }
+  .br-col { display: flex; flex-direction: column; gap: 3px; }
+  .br-cell { width: var(--cell); height: var(--cell); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .br-B { background: var(--banker-bg); color: var(--banker); border: 2px solid var(--banker); }
+  .br-P { background: var(--player-bg); color: var(--player); border: 2px solid var(--player); }
+  .br-T { background: var(--tie-bg); color: var(--tie); border: 2px solid var(--tie); }
+
+  .derived-row { display: flex; gap: 3px; min-height: 20px; flex-wrap: wrap; }
+  .dc { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; }
+  .dc-same { background: var(--banker-bg); border: 1.5px solid var(--banker); }
+  .dc-diff { background: var(--player-bg); border: 1.5px solid var(--player); }
+
+  .sep { height: 1px; background: var(--border); margin: 12px 0; }
+  .empty { color: var(--text2); font-size: 12px; text-align: center; padding: 8px 0; }
+
+  /* Win rate bar */
+  .rate-bar-wrap { margin-top: 8px; }
+  .rate-bar-labels { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
+  .rate-bar-labels .bl { color: var(--banker); }
+  .rate-bar-labels .pl { color: var(--player); }
+  .rate-bar { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .rate-bar-inner { height: 100%; background: linear-gradient(90deg, var(--banker), var(--player)); border-radius: 3px; transition: width 0.4s; }
+
+  /* Pattern label */
+  .pattern-badge { display: inline-block; font-size: 11px; padding: 2px 10px; border-radius: 20px; background: rgba(255,212,59,0.15); color: var(--gold); border: 1px solid rgba(255,212,59,0.3); margin-bottom: 6px; }
+
+  footer { text-align: center; font-size: 11px; color: var(--text2); margin-top: 20px; line-height: 1.6; }
+</style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="header">
-      <h2><i class="fas fa-layer-group"></i> ระบบบันทึกข้อมูลก่อสร้าง</h2>
-      <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-plus"></i> เพิ่มรายการใหม่</button>
-    </div>
+<h1>♠ วิเคราะห์บาคาร่า</h1>
+<p class="subtitle">บันทึกผล → ระบบวิเคราะห์ Pattern + Road Map อัตโนมัติ</p>
 
-    <div class="stats-container">
-      <div class="stat-card">
-        <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
-        <div class="stat-info">
-          <span class="stat-label">จำนวนรายการทั้งหมด</span>
-          <span id="totalRecords" class="stat-value">0</span>
-        </div>
-      </div>
-      <div class="stat-card" style="cursor:pointer" onclick="exportToExcel()">
-        <div class="stat-icon" style="background:#ecfdf5; color:var(--secondary);"><i class="fas fa-file-excel"></i></div>
-        <div class="stat-info">
-          <span class="stat-label">ส่งออกข้อมูล</span>
-          <span class="stat-value" style="color:var(--secondary); font-size:18px;">ดาวน์โหลด CSV</span>
-        </div>
-      </div>
-    </div>
+<div class="btn-row">
+  <button class="btn btn-B" onclick="add('B')">🔵 Banker</button>
+  <button class="btn btn-P" onclick="add('P')">🔴 Player</button>
+  <button class="btn btn-T" onclick="add('T')">🟢 Tie</button>
+  <button class="btn-undo" onclick="undo()">↩ ย้อน</button>
+  <button class="btn-reset" onclick="reset()">✕ รีเซ็ต</button>
+</div>
 
-    <div class="content-card">
-      <div class="filter-bar">
-        <div style="flex:1; min-width:250px; position:relative;">
-          <i class="fas fa-search" style="position:absolute; left:15px; top:11px; color:var(--text-muted);"></i>
-          <input type="text" id="searchInput" class="search-input" style="padding-left:40px;" placeholder="ค้นหา WBS, ชื่องาน, ผู้ควบคุม, ทีมงาน..." onkeyup="filterData()">
-        </div>
-        
-        <div style="flex:1; min-width:250px; position:relative;">
-          <i class="fas fa-filter" style="position:absolute; left:15px; top:11px; color:var(--warning);"></i>
-          <input type="text" id="equipFilter" class="search-input" style="padding-left:40px; border-color:#fcd34d;" list="masterEquipList" placeholder="กรองตามอุปกรณ์..." onkeyup="filterData()" onchange="filterData()">
-        </div>
+<div class="stats-grid">
+  <div class="stat"><div class="stat-label">Banker</div><div class="stat-val b" id="cntB">0</div></div>
+  <div class="stat"><div class="stat-label">Player</div><div class="stat-val p" id="cntP">0</div></div>
+  <div class="stat"><div class="stat-label">Tie</div><div class="stat-val t" id="cntT">0</div></div>
+</div>
+<div class="stats-grid2">
+  <div class="stat"><div class="stat-label">B%</div><div class="stat-val b" id="pctB">-</div></div>
+  <div class="stat"><div class="stat-label">P%</div><div class="stat-val p" id="pctP">-</div></div>
+  <div class="stat"><div class="stat-label">รวม</div><div class="stat-val g" id="cntAll">0</div></div>
+</div>
 
-        <button class="btn btn-light" onclick="clearFilters()"><i class="fas fa-sync-alt"></i> รีเฟรช</button>
-      </div>
-      
-      <table id="dataTable">
-        <thead>
-          <tr>
-            <th>วันที่</th>
-            <th>WBS</th>
-            <th>ชื่องาน</th>
-            <th>ผู้ควบคุม</th>
-            <th>ทีมงาน</th> <th>อุปกรณ์</th>
-            <th>วันที่อนุมัติ</th>
-            <th>รับแฟ้ม</th>
-            <th>จ่ายเงิน</th>
-            <th>พิกัด / แผนที่</th>
-            <th>หมายเหตุ</th>
-            <th style="text-align:center;">จัดการ</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+<div id="rate-section" style="display:none">
+  <div class="rate-bar-wrap" style="margin-bottom:16px; background:var(--bg2); border-radius:12px; padding:12px; border:1px solid var(--border);">
+    <div class="rate-bar-labels"><span class="bl" id="bar-label-b">B 0%</span><span class="pl" id="bar-label-p">P 0%</span></div>
+    <div class="rate-bar"><div class="rate-bar-inner" id="rate-bar-fill" style="width:50%"></div></div>
   </div>
+</div>
 
-  <datalist id="masterEquipList"></datalist>
-  <datalist id="typeList"></datalist>
+<div class="suggest" id="suggest-box">
+  <div class="suggest-label">แนวทางแนะนำ</div>
+  <div class="suggest-main" id="sug-main">— บันทึกผลอย่างน้อย 3 ไม้ —</div>
+  <div class="suggest-reason" id="sug-reason"></div>
+  <div id="pattern-badge-wrap"></div>
+  <div class="history-chips" id="history-chips"></div>
+</div>
 
-  <div id="mainModal" class="modal">
-    <div class="modal-content">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--bg-color); padding-bottom:15px;">
-        <h2 id="modalTitle" style="color:var(--dark); font-size:20px; font-weight:600;"><i class="fas fa-edit" style="color:var(--primary); margin-right:8px;"></i> ข้อมูลรายการ</h2>
-        <span style="cursor:pointer; font-size:28px; color:var(--text-muted); transition:0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="closeModal()">×</span>
-      </div>
-      
-      <div class="modal-body">
-        <form id="recordForm">
-          <input type="hidden" id="recordId">
-          
-          <div class="form-grid">
-            <div class="form-group"><label>วันที่ปฏิบัติงาน: <span style="color:var(--danger)">*</span></label><input type="date" id="f_date" class="search-input" required></div>
-            <div class="form-group"><label>WBS: <span style="color:var(--danger)">*</span></label><input type="text" id="f_wbs" class="search-input" placeholder="ระบุรหัส WBS" required></div>
-          </div>
-          
-          <div class="form-group" style="margin-bottom:15px;"><label>ชื่องาน: <span style="color:var(--danger)">*</span></label><input type="text" id="f_projectName" class="search-input" placeholder="ชื่อโครงการ/งาน" required></div>
-          
-          <div class="form-grid">
-            <div class="form-group"><label>ผู้ควบคุมงาน: <span style="color:var(--danger)">*</span></label><input type="text" id="f_manager" class="search-input" placeholder="ชื่อผู้ควบคุม" required></div>
-            <div class="form-group"><label>ทีมงาน: <span style="color:var(--danger)">*</span></label><input type="text" id="f_team" class="search-input" placeholder="ชื่อทีมงาน" required></div>
-          </div>
+<div class="section-title">Big Road</div>
+<div class="road-wrap">
+  <div class="big-road" id="big-road"><span class="empty">ยังไม่มีข้อมูล</span></div>
+</div>
 
-          <div class="equip-section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-              <h3 style="font-size:16px; color:var(--dark); font-weight:600;"><i class="fas fa-tools" style="color:var(--warning); margin-right:5px;"></i> รายการอุปกรณ์</h3>
-              <button type="button" class="btn btn-success" style="padding:6px 12px; font-size:13px;" onclick="addBlankRow()"><i class="fas fa-plus"></i> เพิ่มแถวอุปกรณ์</button>
-            </div>
-            <div id="equipmentContainer"></div>
-          </div>
+<div class="sep"></div>
 
-          <div class="form-grid" style="background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:15px;">
-            <div class="form-group"><label>วันที่อนุมัติ:</label><input type="date" id="f_appDate" class="search-input"></div>
-            <div class="form-group"><label>วันที่รับแฟ้ม:</label><input type="date" id="f_recvDate" class="search-input"></div>
-            <div class="form-group"><label>วันที่จ่ายเงิน:</label><input type="date" id="f_payDate" class="search-input"></div>
-            <div class="form-group"><label>พิกัด (Lat, Long):</label><input type="text" id="f_coords" class="search-input" placeholder="เช่น 17.4093, 104.7788"></div>
-          </div>
+<div class="section-title">Big Eye Boy</div>
+<div class="road-wrap">
+  <div class="derived-row" id="beb-road"><span class="empty">ต้องการข้อมูลอย่างน้อย 2 คอลัมน์</span></div>
+</div>
 
-          <div class="form-group"><label>หมายเหตุ:</label><textarea id="f_notes" class="search-input" rows="2" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"></textarea></div>
-        </form>
-      </div>
+<div class="section-title">Small Road</div>
+<div class="road-wrap">
+  <div class="derived-row" id="small-road"><span class="empty">ต้องการข้อมูลอย่างน้อย 3 คอลัมน์</span></div>
+</div>
 
-      <div style="text-align:right; border-top:2px solid var(--bg-color); padding-top:20px; display:flex; justify-content:flex-end; gap:10px;">
-        <button type="button" class="btn btn-light" onclick="closeModal()">ยกเลิก</button>
-        <button type="button" id="saveBtn" class="btn btn-primary" onclick="submitForm()"><i class="fas fa-save"></i> บันทึกข้อมูล</button>
-      </div>
-    </div>
-  </div>
+<div class="section-title">Cockroach Road</div>
+<div class="road-wrap">
+  <div class="derived-row" id="cock-road"><span class="empty">ต้องการข้อมูลอย่างน้อย 4 คอลัมน์</span></div>
+</div>
 
-  <div id="toast" class="toast"></div>
+<footer>
+  ⚠️ แอปนี้ช่วย track pattern และสถิติเท่านั้น<br>
+  ผลแต่ละไม้เป็นเหตุการณ์อิสระ ไม่มีระบบใดการันตีผลได้<br>
+  เล่นอย่างมีสติ รู้จักหยุด
+</footer>
 
-  <script>
-    let allRecords = [];
-    let equipmentOptions = [];
-    let isEditMode = false;
+<script>
+let results = [];
 
-    const inlineFieldMap = {
-      'appDate': 'approvalDate',
-      'recvDate': 'fileReceivedDate',
-      'payDate': 'paymentDate',
-      'coords': 'coordinates'
-    };
+function add(v) { results.push(v); render(); }
+function undo() { if (results.length) { results.pop(); render(); } }
+function reset() { if (confirm('รีเซ็ตข้อมูลทั้งหมด?')) { results = []; render(); } }
 
-    window.onload = function() {
-      loadData();
-      google.script.run.withSuccessHandler(function(resp) {
-        if (resp.success) {
-          equipmentOptions = resp.data;
-          const dl = document.getElementById('masterEquipList');
-          const tl = document.getElementById('typeList');
-          const uniqueTypes = [...new Set(equipmentOptions.map(item => item.type))];
-          
-          equipmentOptions.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = `${item.type} | ${item.model}`;
-            dl.appendChild(opt);
-          });
-          
-          uniqueTypes.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t;
-            tl.appendChild(opt);
-          });
-        }
-      }).getEquipmentOptions();
-    };
-
-    function loadData() {
-      document.getElementById('tableBody').innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:var(--primary); margin-bottom:10px;"></i><br>กำลังโหลดข้อมูล...</td></tr>';
-      google.script.run.withSuccessHandler(function(records) {
-        allRecords = records;
-        displayData(records);
-        document.getElementById('totalRecords').innerText = records.length;
-      }).getAllRecords();
+function buildBigRoad(arr) {
+  const cols = [];
+  let col = [];
+  let last = null;
+  for (const r of arr) {
+    if (r === 'T') {
+      if (col.length) col[col.length - 1].ties = (col[col.length - 1].ties || 0) + 1;
+      continue;
     }
-
-    function createInlineHTML(id, fieldCode, value, inputType="text", placeholder="") {
-      let displayValue = value || '-';
-      let iconColor = value ? 'var(--warning)' : '#cbd5e1';
-      let inputVal = value ? value : '';
-      
-      let viewHtml = `
-        <div id="view_${fieldCode}_${id}" style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-          <span style="color:${value ? 'var(--text-main)' : 'var(--text-muted)'}; font-size:12px;">${displayValue}</span>
-          <button onclick="toggleInlineEdit('${id}', '${fieldCode}')" style="background:none; border:none; cursor:pointer; color:${iconColor}; padding:2px;" title="แก้ไข"><i class="fas fa-pencil-alt"></i></button>
-        </div>
-      `;
-
-      let editHtml = `
-        <div id="edit_${fieldCode}_${id}" style="display:none; width: 100%;">
-          <input type="${inputType}" id="input_${fieldCode}_${id}" class="search-input" style="padding:4px 6px; font-size:11px; margin-bottom:5px; width:100%; border:1px solid var(--primary);" value="${inputVal}" placeholder="${placeholder}">
-          <div style="display:flex; gap:4px;">
-            <button class="btn btn-primary" style="padding:2px; font-size:10px; flex:1;" onclick="saveInlineEdit(event, '${id}', '${fieldCode}')"><i class="fas fa-check"></i></button>
-            <button class="btn btn-light" style="padding:2px 6px; font-size:10px;" onclick="toggleInlineEdit('${id}', '${fieldCode}')"><i class="fas fa-times"></i></button>
-          </div>
-        </div>
-      `;
-      return viewHtml + editHtml;
+    if (r !== last) {
+      if (col.length) cols.push(col);
+      col = [{ v: r, ties: 0 }];
+      last = r;
+    } else {
+      col.push({ v: r, ties: 0 });
     }
+  }
+  if (col.length) cols.push(col);
+  return cols;
+}
 
-    function displayData(records) {
-      const tbody = document.getElementById('tableBody');
-      tbody.innerHTML = '';
-      
-      if(records.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px; color:var(--text-muted);">ไม่พบข้อมูล</td></tr>';
-          return;
-      }
-      
-      records.forEach(r => {
-        let equips = [];
-        try { equips = JSON.parse(r['รายการอุปกรณ์'] || '[]'); } catch(e){}
-        let equipTxt = equips.map(e => `<span style="display:inline-block; background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:12px; font-size:11px; margin:2px 0; border:1px solid #bae6fd;">${e.type} ${e.model} (${e.quantity} ${e.unit})</span>`).join(' ');
-        
-        let coordHtml = '';
-        const rawCoords = r['พิกัด'] || '';
-        if(rawCoords.trim() !== '') {
-          // ใช้ Replace ถอดตัว $ ออก (ถ้าเผลอพิมพ์มา) เพื่อให้ได้ค่าที่สะอาด
-          const cleanCoords = rawCoords.replace(/\s/g, '').replace(/\$/g, '');
-          
-          // แก้ไขรูปแบบ Link แผนที่ให้ถูกต้องสำหรับ Google Maps
-          coordHtml = `
-            <div id="view_coords_${r['รหัสอ้างอิง']}">
-              <a href="https://www.google.com/maps?q=${encodeURIComponent(cleanCoords)}" target="_blank" style="color:var(--primary); font-weight:500; text-decoration:none; font-size:12px; display:block; margin-bottom:4px;"><i class="fas fa-map-marker-alt" style="color:var(--danger)"></i> แผนที่</a>
-              <div style="display:flex; align-items:center; gap:5px;">
-                <span style="color:var(--text-muted); background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:11px;">${rawCoords}</span>
-                <button onclick="toggleInlineEdit('${r['รหัสอ้างอิง']}', 'coords')" style="background:none; border:none; cursor:pointer; color:var(--warning); padding:2px;" title="แก้ไขพิกัด"><i class="fas fa-pencil-alt"></i></button>
-              </div>
-            </div>
-          `;
-        } else {
-          coordHtml = `
-            <div id="view_coords_${r['รหัสอ้างอิง']}">
-              <button class="btn btn-light" style="padding:4px 8px; font-size:11px; color:var(--text-muted);" onclick="toggleInlineEdit('${r['รหัสอ้างอิง']}', 'coords')"><i class="fas fa-map-marker-alt" style="color:#cbd5e1;"></i> เพิ่มพิกัด</button>
-            </div>
-          `;
-        }
-        const coordEditHtml = `
-          <div id="edit_coords_${r['รหัสอ้างอิง']}" style="display:none; width: 100%;">
-            <input type="text" id="input_coords_${r['รหัสอ้างอิง']}" class="search-input" style="padding:4px 6px; font-size:11px; margin-bottom:5px; width:100%; border:1px solid var(--primary);" value="${rawCoords}" placeholder="เช่น 17.4093, 104.7788">
-            <div style="display:flex; gap:4px;">
-              <button class="btn btn-primary" style="padding:2px; font-size:10px; flex:1;" onclick="saveInlineEdit(event, '${r['รหัสอ้างอิง']}', 'coords')"><i class="fas fa-check"></i></button>
-              <button class="btn btn-light" style="padding:2px 6px; font-size:10px;" onclick="toggleInlineEdit('${r['รหัสอ้างอิง']}', 'coords')"><i class="fas fa-times"></i></button>
-            </div>
-          </div>
-        `;
-        
-        let appDateHtml = createInlineHTML(r['รหัสอ้างอิง'], 'appDate', formatDateForInput(r['วันที่อนุมัติงาน']), 'date');
-        let recvDateHtml = createInlineHTML(r['รหัสอ้างอิง'], 'recvDate', formatDateForInput(r['วันที่รับแฟ้มงาน']), 'date');
-        let payDateHtml = createInlineHTML(r['รหัสอ้างอิง'], 'payDate', formatDateForInput(r['วันที่จ่ายเงิน']), 'date');
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="font-size:12px;">${r['วันที่'] || ''}</td>
-          <td style="font-weight:500; color:var(--primary); font-size:12px;">${r['WBS'] || ''}</td>
-          <td style="font-weight:500;">${r['ชื่องาน'] || ''}</td>
-          <td style="font-size:12px;">${r['ผู้ควบคุมงาน'] || ''}</td>
-          <td style="font-size:12px;">${r['ทีมงาน'] || ''}</td> <td>${equipTxt || '-'}</td>
-          <td>${appDateHtml}</td>
-          <td>${recvDateHtml}</td>
-          <td>${payDateHtml}</td>
-          <td>${coordHtml}${coordEditHtml}</td>
-          <td style="color:var(--danger); font-size:12px;">${r['หมายเหตุ'] || ''}</td>
-          <td style="text-align:center; white-space:nowrap;">
-            <button class="btn btn-warning" style="padding:4px 8px; font-size:12px;" onclick="openEditModal('${r['รหัสอ้างอิง']}')" title="แก้ไขแบบเต็ม"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="deleteRecord('${r['รหัสอ้างอิง']}')" title="ลบ"><i class="fas fa-trash"></i></button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function formatDateForInput(d) {
-      if (!d) return '';
-      try {
-        const date = new Date(d);
-        if (isNaN(date.getTime())) return d;
-        return date.toISOString().split('T')[0];
-      } catch(e) { return d; }
-    }
-
-    function toggleInlineEdit(id, fieldCode) {
-      const view = document.getElementById(`view_${fieldCode}_${id}`);
-      const edit = document.getElementById(`edit_${fieldCode}_${id}`);
-      
-      if(view.style.display === 'none') {
-        view.style.display = 'flex';
-        edit.style.display = 'none';
+function getBEB(bigRoad) {
+  const res = [];
+  for (let c = 1; c < bigRoad.length; c++) {
+    const cur = bigRoad[c];
+    const prev = bigRoad[c - 1];
+    const ref = bigRoad[c - 2];
+    for (let r = 0; r < cur.length; r++) {
+      if (r === 0) {
+        res.push(ref ? (cur.length === prev.length ? 'same' : 'diff') : 'diff');
       } else {
-        view.style.display = 'none';
-        edit.style.display = 'block';
-        document.getElementById(`input_${fieldCode}_${id}`).focus();
+        res.push(prev[r] !== undefined ? 'same' : 'diff');
       }
     }
+  }
+  return res;
+}
 
-    function saveInlineEdit(event, id, fieldCode) {
-      const inputVal = document.getElementById(`input_${fieldCode}_${id}`).value;
-      const r = allRecords.find(x => x['รหัสอ้างอิง'] === id);
-      if(!r) return;
-
-      const btn = event.currentTarget;
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-      btn.disabled = true;
-
-      let equips = [];
-      try { equips = JSON.parse(r['รายการอุปกรณ์'] || '[]'); } catch(e){}
-
-      const data = {
-        date: r['วันที่'] || '',
-        wbs: r['WBS'] || '',
-        projectName: r['ชื่องาน'] || '',
-        manager: r['ผู้ควบคุมงาน'] || '',
-        team: r['ทีมงาน'] || '',
-        equipment: equips,
-        notes: r['หมายเหตุ'] || '',
-        approvalDate: formatDateForInput(r['วันที่อนุมัติงาน']),
-        paymentDate: formatDateForInput(r['วันที่จ่ายเงิน']),
-        fileReceivedDate: formatDateForInput(r['วันที่รับแฟ้มงาน']),
-        coordinates: r['พิกัด'] || ''
-      };
-
-      const jsonKey = inlineFieldMap[fieldCode];
-      data[jsonKey] = inputVal;
-
-      google.script.run.withSuccessHandler(function(resp) {
-        if(resp.success) {
-          showToast('บันทึกข้อมูลเรียบร้อย!', 'success');
-          loadData(); 
-        } else {
-          showToast('ข้อผิดพลาด: ' + resp.message, 'danger');
-          btn.innerHTML = originalHtml;
-          btn.disabled = false;
-        }
-      }).withFailureHandler(function(error) {
-        showToast('ระบบขัดข้อง: ' + error.message, 'danger');
-        btn.innerHTML = originalHtml;
-        btn.disabled = false;
-      }).updateRecord(id, data);
+function getSmall(bigRoad) {
+  const res = [];
+  for (let c = 2; c < bigRoad.length; c++) {
+    const cur = bigRoad[c];
+    const ref = bigRoad[c - 2];
+    for (let r = 0; r < cur.length; r++) {
+      if (r === 0) res.push(ref.length === bigRoad[c - 1].length ? 'same' : 'diff');
+      else res.push(ref[r] !== undefined ? 'same' : 'diff');
     }
+  }
+  return res;
+}
 
-    function filterData() {
-      const term = document.getElementById('searchInput').value.toLowerCase();
-      let equipFilterRaw = document.getElementById('equipFilter').value.toLowerCase();
-      
-      let equipTerm = equipFilterRaw;
-      if(equipFilterRaw.includes('|')) {
-        equipTerm = equipFilterRaw.split('|').map(s => s.trim()).join(' ');
-      }
-
-      const filtered = allRecords.filter(r => {
-        const matchMain = (r['WBS'] || '').toLowerCase().includes(term) || 
-                          (r['ชื่องาน'] || '').toLowerCase().includes(term) || 
-                          (r['ผู้ควบคุมงาน'] || '').toLowerCase().includes(term) || 
-                          (r['ทีมงาน'] || '').toLowerCase().includes(term); // <-- เพิ่มค้นหาทีมงาน
-        
-        let equips = [];
-        try { equips = JSON.parse(r['รายการอุปกรณ์'] || '[]'); } catch(e){}
-        
-        let matchEquip = true; 
-        if (equipTerm !== '') {
-            matchEquip = equips.some(e => {
-                const itemStr = `${e.type} ${e.model}`.toLowerCase();
-                return itemStr.includes(equipTerm);
-            });
-            if(!matchEquip) {
-                matchEquip = (r['รายการอุปกรณ์'] || '').toLowerCase().includes(equipTerm);
-            }
-        }
-        return matchMain && matchEquip;
-      });
-      displayData(filtered);
+function getCock(bigRoad) {
+  const res = [];
+  for (let c = 3; c < bigRoad.length; c++) {
+    const cur = bigRoad[c];
+    const ref = bigRoad[c - 3];
+    for (let r = 0; r < cur.length; r++) {
+      if (r === 0) res.push(ref.length === bigRoad[c - 1].length ? 'same' : 'diff');
+      else res.push(ref[r] !== undefined ? 'same' : 'diff');
     }
+  }
+  return res;
+}
 
-    function clearFilters() {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('equipFilter').value = '';
-      loadData();
+function renderBigRoad(cols) {
+  const el = document.getElementById('big-road');
+  if (!cols.length) { el.innerHTML = '<span class="empty">ยังไม่มีข้อมูล</span>'; return; }
+  el.innerHTML = '';
+  for (const col of cols) {
+    const colDiv = document.createElement('div');
+    colDiv.className = 'br-col';
+    for (const cell of col) {
+      const d = document.createElement('div');
+      d.className = 'br-cell br-' + cell.v;
+      d.textContent = cell.v;
+      if (cell.ties > 0) d.title = 'Tie x' + cell.ties;
+      colDiv.appendChild(d);
     }
+    el.appendChild(colDiv);
+  }
+}
 
-    function addBlankRow() { addEquipRow('', '', '', 1); }
+function renderDerived(id, data, minMsg) {
+  const el = document.getElementById(id);
+  if (!data.length) { el.innerHTML = '<span class="empty">' + minMsg + '</span>'; return; }
+  el.innerHTML = '';
+  for (const v of data) {
+    const d = document.createElement('div');
+    d.className = 'dc dc-' + v;
+    el.appendChild(d);
+  }
+}
 
-    function addEquipRow(type='', model='', unit='', qty=1) {
-      const container = document.getElementById('equipmentContainer');
-      const rowId = 'row_' + Math.random().toString(36).substr(2, 9);
-      const row = document.createElement('div');
-      row.className = 'equipment-row';
-      row.innerHTML = `
-        <div class="equip-col"><label>ประเภท</label><input type="text" class="search-input e-type" list="typeList" onchange="autoLoadModel(this, '${rowId}')" value="${type}" placeholder="เลือกประเภท" required></div>
-        <div class="equip-col"><label>รุ่น/ขนาด</label><input type="text" class="search-input e-model" list="${rowId}" onchange="autoLoadUnit(this)" value="${model}" placeholder="เลือกรุ่น" required>
-        <datalist id="${rowId}"></datalist></div>
-        <div class="equip-col-sm"><label>จำนวน</label><input type="number" class="search-input e-qty" value="${qty}" min="1" required></div>
-        <div class="equip-col-sm"><label>หน่วย</label><input type="text" class="search-input e-unit" value="${unit}" readonly style="background:#f8fafc; color:#94a3b8; border-color:#e2e8f0;"></div>
-        <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()" style="padding:8px 12px; height:42px;"><i class="fas fa-trash"></i></button>
-      `;
-      container.appendChild(row);
-      
-      if(type) { autoLoadModel(row.querySelector('.e-type'), rowId, true); }
+function detectPattern(nonTie) {
+  if (nonTie.length < 4) return null;
+  const last6 = nonTie.slice(-6);
+  const switches = last6.reduce((a, v, i) => i > 0 && v !== last6[i - 1] ? a + 1 : a, 0);
+  if (switches >= last6.length - 1) return 'ping-pong';
+
+  let streak = 1;
+  const last = nonTie[nonTie.length - 1];
+  for (let i = nonTie.length - 2; i >= 0; i--) {
+    if (nonTie[i] === last) streak++;
+    else break;
+  }
+  if (streak >= 4) return 'long-streak';
+  if (streak >= 2) return 'streak';
+  return 'neutral';
+}
+
+function getSuggestion(nonTie) {
+  if (nonTie.length < 3) return null;
+  const total = nonTie.length;
+  const bCount = nonTie.filter(r => r === 'B').length;
+  const pCount = nonTie.filter(r => r === 'P').length;
+  const bPct = bCount / total * 100;
+  const pPct = pCount / total * 100;
+
+  let streak = 1;
+  const lastVal = nonTie[nonTie.length - 1];
+  for (let i = nonTie.length - 2; i >= 0; i--) {
+    if (nonTie[i] === lastVal) streak++;
+    else break;
+  }
+
+  const last6 = nonTie.slice(-6);
+  const switches = last6.reduce((a, v, i) => i > 0 && v !== last6[i - 1] ? a + 1 : a, 0);
+  const isPP = last6.length >= 4 && switches >= last6.length - 1;
+
+  let rec, reason, patternLabel;
+
+  if (isPP) {
+    rec = lastVal === 'B' ? 'P' : 'B';
+    reason = 'รูปแบบ Ping-Pong ชัดเจน → แนะนำสลับฝั่ง';
+    patternLabel = '🔀 Ping-Pong Pattern';
+  } else if (streak >= 4) {
+    rec = lastVal;
+    reason = `เส้น ${lastVal === 'B' ? 'Banker' : 'Player'} ยาว ${streak} ไม้ → ตามเส้น`;
+    patternLabel = `🔥 Long Streak (${streak} ไม้)`;
+  } else if (streak >= 2) {
+    rec = lastVal;
+    reason = `เส้น ${lastVal === 'B' ? 'Banker' : 'Player'} ${streak} ไม้ → ตามเส้น`;
+    patternLabel = `📈 Streak (${streak} ไม้)`;
+  } else {
+    if (bPct > 55) { rec = 'B'; reason = 'Banker นำสถิติชัดเจน'; patternLabel = '📊 สถิตินำ'; }
+    else if (pPct > 55) { rec = 'P'; reason = 'Player นำสถิติชัดเจน'; patternLabel = '📊 สถิตินำ'; }
+    else { rec = 'B'; reason = 'สถิติใกล้เคียง → Banker ได้เปรียบเล็กน้อยระยะยาว'; patternLabel = '⚖️ สมดุล'; }
+  }
+
+  return { rec, reason, patternLabel, streak, lastVal, bPct, pPct };
+}
+
+function render() {
+  const cB = results.filter(r => r === 'B').length;
+  const cP = results.filter(r => r === 'P').length;
+  const cT = results.filter(r => r === 'T').length;
+  const total = results.length;
+  const nonTie = results.filter(r => r !== 'T');
+  const nt = nonTie.length;
+
+  document.getElementById('cntB').textContent = cB;
+  document.getElementById('cntP').textContent = cP;
+  document.getElementById('cntT').textContent = cT;
+  document.getElementById('cntAll').textContent = total;
+
+  if (nt > 0) {
+    const bP = (cB / nt * 100).toFixed(1);
+    const pP = (cP / nt * 100).toFixed(1);
+    document.getElementById('pctB').textContent = bP + '%';
+    document.getElementById('pctP').textContent = pP + '%';
+    document.getElementById('rate-section').style.display = 'block';
+    document.getElementById('bar-label-b').textContent = 'B ' + bP + '%';
+    document.getElementById('bar-label-p').textContent = 'P ' + pP + '%';
+    document.getElementById('rate-bar-fill').style.width = bP + '%';
+  } else {
+    document.getElementById('pctB').textContent = '-';
+    document.getElementById('pctP').textContent = '-';
+    document.getElementById('rate-section').style.display = 'none';
+  }
+
+  const bigRoad = buildBigRoad(results);
+  renderBigRoad(bigRoad);
+  renderDerived('beb-road', getBEB(bigRoad), 'ต้องการข้อมูลอย่างน้อย 2 คอลัมน์');
+  renderDerived('small-road', getSmall(bigRoad), 'ต้องการข้อมูลอย่างน้อย 3 คอลัมน์');
+  renderDerived('cock-road', getCock(bigRoad), 'ต้องการข้อมูลอย่างน้อย 4 คอลัมน์');
+
+  const sug = getSuggestion(nonTie);
+  const sMain = document.getElementById('sug-main');
+  const sReason = document.getElementById('sug-reason');
+  const chips = document.getElementById('history-chips');
+  const badgeWrap = document.getElementById('pattern-badge-wrap');
+
+  if (!sug) {
+    sMain.textContent = '— บันทึกผลอย่างน้อย 3 ไม้ —';
+    sMain.className = 'suggest-main';
+    sReason.textContent = '';
+    chips.innerHTML = '';
+    badgeWrap.innerHTML = '';
+  } else {
+    sMain.textContent = sug.rec === 'B' ? '🔵 Banker' : '🔴 Player';
+    sMain.className = 'suggest-main ' + (sug.rec === 'B' ? 'b' : 'p');
+    sReason.textContent = sug.reason;
+    badgeWrap.innerHTML = '<span class="pattern-badge">' + sug.patternLabel + '</span>';
+
+    chips.innerHTML = '';
+    const last12 = results.slice(-12);
+    for (const r of last12) {
+      const c = document.createElement('div');
+      c.className = 'chip chip-' + r;
+      c.textContent = r;
+      chips.appendChild(c);
     }
+    const arrow = document.createElement('div');
+    arrow.className = 'chip-arrow';
+    arrow.textContent = '→';
+    chips.appendChild(arrow);
+    const next = document.createElement('div');
+    next.className = 'chip chip-' + sug.rec;
+    next.style.cssText = 'outline: 2px solid ' + (sug.rec === 'B' ? 'var(--banker)' : 'var(--player)') + '; outline-offset: 2px;';
+    next.textContent = sug.rec;
+    chips.appendChild(next);
+  }
+}
 
-    function autoLoadModel(input, listId, isInit = false) {
-      const type = input.value;
-      const dl = document.getElementById(listId);
-      dl.innerHTML = '';
-      
-      const row = input.closest('.equipment-row');
-      const modelInput = row.querySelector('.e-model');
-      const unitInput = row.querySelector('.e-unit');
-      
-      if(!isInit) { modelInput.value = ''; unitInput.value = ''; }
-      
-      equipmentOptions.filter(o => o.type === type).forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item.model;
-        dl.appendChild(opt);
-      });
-    }
-
-    function autoLoadUnit(input) {
-      const model = input.value;
-      const row = input.closest('.equipment-row');
-      const type = row.querySelector('.e-type').value;
-      const unitInput = row.querySelector('.e-unit');
-      
-      const item = equipmentOptions.find(o => o.type === type && o.model === model);
-      if(item) unitInput.value = item.unit;
-    }
-
-    function openAddModal() {
-      isEditMode = false;
-      document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle" style="color:var(--secondary); margin-right:8px;"></i> เพิ่มรายการบันทึกงานใหม่';
-      document.getElementById('recordForm').reset();
-      document.getElementById('f_date').value = new Date().toISOString().split('T')[0];
-      document.getElementById('equipmentContainer').innerHTML = '';
-      addBlankRow();
-      document.getElementById('mainModal').style.display = 'block';
-    }
-
-    function openEditModal(id) {
-      isEditMode = true;
-      const r = allRecords.find(x => x['รหัสอ้างอิง'] === id);
-      if(!r) return;
-
-      document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit" style="color:var(--warning); margin-right:8px;"></i> แก้ไขข้อมูลรายการ';
-      document.getElementById('recordId').value = id;
-      document.getElementById('f_date').value = r['วันที่'] || '';
-      document.getElementById('f_wbs').value = r['WBS'] || '';
-      document.getElementById('f_projectName').value = r['ชื่องาน'] || '';
-      document.getElementById('f_manager').value = r['ผู้ควบคุมงาน'] || '';
-      document.getElementById('f_team').value = r['ทีมงาน'] || '';
-      document.getElementById('f_appDate').value = formatDateForInput(r['วันที่อนุมัติงาน']);
-      document.getElementById('f_payDate').value = formatDateForInput(r['วันที่จ่ายเงิน']);
-      document.getElementById('f_recvDate').value = formatDateForInput(r['วันที่รับแฟ้มงาน']);
-      document.getElementById('f_coords').value = r['พิกัด'] || '';
-      document.getElementById('f_notes').value = r['หมายเหตุ'] || '';
-
-      const container = document.getElementById('equipmentContainer');
-      container.innerHTML = '';
-      let equips = [];
-      try { equips = JSON.parse(r['รายการอุปกรณ์'] || '[]'); } catch(e){}
-      
-      if(equips.length > 0) {
-        equips.forEach(e => addEquipRow(e.type, e.model, e.unit, e.quantity));
-      } else {
-        addBlankRow();
-      }
-
-      document.getElementById('mainModal').style.display = 'block';
-    }
-
-    function closeModal() { document.getElementById('mainModal').style.display = 'none'; }
-
-    function submitForm() {
-      const btn = document.getElementById('saveBtn');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
-
-      const equips = [];
-      document.querySelectorAll('.equipment-row').forEach(row => {
-        const type = row.querySelector('.e-type').value;
-        const model = row.querySelector('.e-model').value;
-        if(type && model) {
-          equips.push({
-            type: type,
-            model: model,
-            quantity: row.querySelector('.e-qty').value,
-            unit: row.querySelector('.e-unit').value
-          });
-        }
-      });
-
-      const data = {
-        date: document.getElementById('f_date').value,
-        wbs: document.getElementById('f_wbs').value,
-        projectName: document.getElementById('f_projectName').value,
-        manager: document.getElementById('f_manager').value,
-        team: document.getElementById('f_team').value,
-        equipment: equips,
-        notes: document.getElementById('f_notes').value,
-        approvalDate: document.getElementById('f_appDate').value,
-        paymentDate: document.getElementById('f_payDate').value,
-        fileReceivedDate: document.getElementById('f_recvDate').value,
-        coordinates: document.getElementById('f_coords').value
-      };
-
-      const id = document.getElementById('recordId').value;
-      const run = isEditMode ? google.script.run.withSuccessHandler(afterSave).updateRecord(id, data) 
-                             : google.script.run.withSuccessHandler(afterSave).saveRecord(data);
-    }
-
-    function afterSave(resp) {
-      const btn = document.getElementById('saveBtn');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-save"></i> บันทึกข้อมูล';
-      if(resp.success) {
-        showToast('บันทึกข้อมูลสำเร็จ!', 'success');
-        closeModal();
-        loadData();
-      } else {
-        showToast('เกิดข้อผิดพลาด: ' + resp.message, 'danger');
-      }
-    }
-
-    function deleteRecord(id) {
-      if(confirm('ยืนยันการลบรายการนี้? ข้อมูลจะไม่สามารถกู้คืนได้')) {
-        google.script.run.withSuccessHandler(loadData).deleteRecord(id);
-        showToast('ลบข้อมูลเรียบร้อย', 'danger');
-      }
-    }
-
-    function showToast(msg, type) {
-      const t = document.getElementById('toast');
-      t.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
-      t.style.background = type === 'success' ? 'var(--secondary)' : 'var(--danger)';
-      t.style.display = 'block';
-      t.style.animation = 'slideInRight 0.3s ease';
-      setTimeout(() => {
-        t.style.animation = 'slideOutRight 0.3s ease forwards';
-        setTimeout(() => t.style.display = 'none', 300);
-      }, 3000);
-    }
-
-    function exportToExcel() {
-      if(allRecords.length === 0) return;
-      let csv = "\uFEFFวันที่,WBS,ชื่องาน,ผู้ควบคุมงาน,ทีมงาน,อุปกรณ์,วันที่อนุมัติ,รับแฟ้ม,จ่ายเงิน,พิกัด,หมายเหตุ\n";
-      allRecords.forEach(r => {
-        let equips = JSON.parse(r['รายการอุปกรณ์'] || '[]');
-        let eTxt = equips.map(e => `${e.type} ${e.model}(${e.quantity})`).join('|');
-        csv += `${r['วันที่']},${r['WBS']},"${r['ชื่องาน']}","${r['ผู้ควบคุมงาน']}","${r['ทีมงาน']}","${eTxt}","${r['วันที่อนุมัติงาน']}","${r['วันที่รับแฟ้มงาน']}","${r['วันที่จ่ายเงิน']}","${r['พิกัด']}","${r['หมายเหตุ']}"\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "Construction_Data.csv";
-      link.click();
-    }
-  </script>
+render();
+</script>
 </body>
 </html>
