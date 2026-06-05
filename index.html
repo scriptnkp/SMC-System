@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PEA นครพนม - ระบบจัดการใบบริการ</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=4">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 </head>
 <body>
@@ -254,11 +254,11 @@
             <span id="calc-service">570.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:13px;color:#6b7280">
-            <span style="padding-left:16px">· รวมพัสดุ + ค่าดำเนินการ 31%</span>
-            <span id="calc-mat-with-handling">0.00</span>
+            <span style="padding-left:16px">· รวมพัสดุ (ราคา+40%)</span>
+            <span id="calc-mat-total">0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:13.5px">
-            <span>รวม (ข้อ 1.+2.)</span>
+            <span>รวมเป็นเงิน (ข้อ 1.+2.)</span>
             <strong id="calc-pretax">-</strong>
           </div>
           <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:13.5px">
@@ -426,17 +426,15 @@
 
 <div id="toast-container"></div>
 
-<script src="js/materials.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/app.js"></script>
+<script src="js/materials.js?v=4"></script>
+<script src="js/storage.js?v=4"></script>
+<script src="js/app.js?v=4"></script>
 <script>
-  // Set current date in topbar
   const d = new Date();
   const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   document.getElementById('current-date').textContent =
     `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
 
-  // CSV upload from settings
   function importCSV(input) {
     const file = input.files[0];
     if (!file) return;
@@ -451,8 +449,5 @@
     reader.readAsText(file, 'UTF-8');
   }
 </script>
-<script src="js/materials.js?v=2"></script>
-<script src="js/storage.js?v=2"></script>
-<script src="js/app.js?v=2"></script>
 </body>
 </html>

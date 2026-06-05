@@ -198,7 +198,7 @@ document.addEventListener('click', e => {
   }
 });
 
-// ===== CALCULATIONS =====
+// ===== CALCULATIONS (UPDATED: Service + Material 40% NO HANDLING FEE) =====
 function calcTotals() {
   const s = getSettings();
   const switchCost = parseFloat(s.switchCost) || 570;
@@ -206,19 +206,22 @@ function calcTotals() {
 
   const matTotal = br1MaterialRows.reduce((sum, r) => sum + (calcUserPrice(r.basePrice) * r.qty), 0);
   const serviceCost = svc30 * 2;
-  const totalPreTax = switchCost + serviceCost + matTotal * 1.31; 
+  
+  // ข้อ 2.) ค่าตรวจสอบ + แก้ไข + พัสดุ (S-3Z-444)
+  const subtotal2 = serviceCost + matTotal; 
+  
+  // รวมเป็นเงิน (ข้อ 1.+2. )
+  const totalPreTax = switchCost + subtotal2; 
   const tax = totalPreTax * 0.07;
   const grandTotal = totalPreTax + tax;
 
   setText('calc-switch', fmt(switchCost));
   setText('calc-service', fmt(serviceCost));
   setText('calc-mat-total', fmt(matTotal));
-  setText('calc-mat-with-handling', fmt(matTotal * 1.31));
-  setText('calc-subtotal', fmt(switchCost + matTotal * 1.31));
-  setText('calc-service-subtotal', fmt(serviceCost + matTotal * 1.31));
-  setText('calc-pretax', fmt(totalPreTax - switchCost));
-  setText('calc-tax', fmt((totalPreTax - switchCost) * 0.07));
-  setText('calc-grand', fmt(grandTotal - switchCost * 1.07 + switchCost));
+  setText('calc-service-subtotal', fmt(subtotal2));
+  setText('calc-pretax', fmt(totalPreTax));
+  setText('calc-tax', fmt(tax));
+  setText('calc-grand', fmt(grandTotal));
 }
 
 function setText(id, val) {
@@ -226,7 +229,7 @@ function setText(id, val) {
   if (el) el.textContent = val;
 }
 
-// ===== SAVE JOB =====
+// ===== SAVE JOB (UPDATED LOGIC) =====
 function saveCurrentJob() {
   const s = getSettings();
   const switchCost = parseFloat(s.switchCost) || 570;
@@ -258,10 +261,14 @@ function saveCurrentJob() {
 
   const matUserTotal = br1MaterialRows.reduce((sum, r) => sum + calcUserPrice(r.basePrice) * r.qty, 0);
   job.matUserTotal = Math.round(matUserTotal * 100) / 100;
-  job.matWithHandling = Math.round(matUserTotal * 1.31 * 100) / 100;
-  job.subtotal2 = Math.round((svc30 * 2 + job.matWithHandling) * 100) / 100;
-  job.tax = Math.round(job.subtotal2 * 0.07 * 100) / 100;
-  job.grandTotal = Math.round((switchCost + job.subtotal2 + job.tax) * 100) / 100;
+  
+  // คำนวณยอด 2.) (บริการ + พัสดุ)
+  job.subtotal2 = Math.round((svc30 * 2 + job.matUserTotal) * 100) / 100;
+  
+  // รวม 1 + 2
+  const totalPreTax = switchCost + job.subtotal2;
+  job.tax = Math.round(totalPreTax * 0.07 * 100) / 100;
+  job.grandTotal = Math.round((totalPreTax + job.tax) * 100) / 100;
 
   if (!job.date || !job.meterNo) {
     showToast('กรุณากรอก วันที่ และ หมายเลขมิเตอร์', 'warning');
@@ -317,25 +324,27 @@ function printDoc() {
   setTimeout(() => win.print(), 500);
 }
 
-// ===== BR1 HTML GENERATOR =====
+// ===== BR1 HTML GENERATOR (UPDATED: Corrected Math) =====
 function generateBR1HTML(job) {
   const s = getSettings();
-  const switchCost = job.switchCost || 570;
-  const svc30 = job.svc30 || 285;
+  const switchCost = job.switchCost !== undefined ? job.switchCost : 570;
+  const svc30 = job.svc30 !== undefined ? job.svc30 : 285;
   const serviceCost = svc30 * 2;
   const matRows = job.materials || [];
   const matUserTotal = matRows.reduce((sum, r) => sum + calcUserPrice(r.basePrice) * r.qty, 0);
-  const matWithHandling = matUserTotal * 1.31;
-  const subtotal2 = serviceCost + matWithHandling;
-  const tax = subtotal2 * 0.07;
-  const grandTotal = switchCost + subtotal2 + tax;
+  
+  // คำนวณใหม่ ไม่มี 1.31
+  const subtotal2 = serviceCost + matUserTotal;
+  const totalPreTax = switchCost + subtotal2;
+  const tax = totalPreTax * 0.07;
+  const grandTotal = totalPreTax + tax;
 
   const matTableRows = matRows.map((r, i) => `
     <tr>
-      <td>${i+1}</td>
-      <td>${r.code}</td>
+      <td style="text-align:center">${i+1}</td>
+      <td style="text-align:center">${r.code}</td>
       <td style="text-align:left">${r.name}</td>
-      <td>${r.qty}</td>
+      <td style="text-align:center">${r.qty}</td>
       <td style="text-align:right">${fmt(r.basePrice)}</td>
       <td style="text-align:right"><strong>${fmt(calcUserPrice(r.basePrice) * r.qty)}</strong></td>
       <td></td>
@@ -432,7 +441,7 @@ function generateBR1HTML(job) {
 
   <div style="font-size:13px;font-weight:700;margin:8px 0 4px">รายการพัสดุ</div>
   <div style="font-size:12.5px;font-weight:600;margin-bottom:4px">ข้อ ข. อุปกรณ์ที่ กฟภ. นำมาใช้ในการแก้ไขกระแสไฟฟ้าขัดข้องให้ ( ลูกค้า / ผู้ใช้ไฟ )</div>
-  <div style="font-size:11.5px;color:#555;margin-bottom:6px">( 1.) ทำราคาพัสดุ กฟภ. ให้เป็นราคาผู้ใช้ไฟ (บวก 15%) &nbsp;&nbsp; ( 2.) ค่าดำเนินการบวก 31%</div>
+  <div style="font-size:11.5px;color:#555;margin-bottom:6px">( 1.) ราคาพัสดุ กฟภ. คิดเป็นราคาผู้ใช้ไฟ (บวก 40%) แล้ว</div>
 
   <table style="width:100%;border-collapse:collapse;font-size:12px;margin:8px 0">
     <thead>
@@ -478,7 +487,7 @@ function generateBR1HTML(job) {
       <span style="flex:1;padding-left:40px;font-size:12px">- รวมเป็นเงิน (ข้อ 1.+2. )</span>
       <span style="font-size:11px;color:#666;width:65px"></span>
       <span>เป็นเงิน</span>
-      <span style="width:80px;text-align:right;border-bottom:1px solid #666;padding:0 4px">${fmt(switchCost + subtotal2)}</span>
+      <span style="width:80px;text-align:right;border-bottom:1px solid #666;padding:0 4px">${fmt(totalPreTax)}</span>
       <span style="margin-left:4px;font-size:12px">บาท</span>
     </div>
     <div style="display:flex;font-size:12.5px;padding:2px 0;align-items:baseline">
@@ -520,17 +529,19 @@ function generateBR1HTML(job) {
 </div>`;
 }
 
-// ===== MT1 HTML GENERATOR =====
+// ===== MT1 HTML GENERATOR (UPDATED: Corrected Math) =====
 function generateMT1HTML(job) {
   const s = getSettings();
-  const switchCost = job.switchCost || 570;
-  const svc30 = job.svc30 || 285;
+  const switchCost = job.switchCost !== undefined ? job.switchCost : 570;
+  const svc30 = job.svc30 !== undefined ? job.svc30 : 285;
   const matRows = job.materials || [];
   const matUserTotal = matRows.reduce((sum, r) => sum + calcUserPrice(r.basePrice) * r.qty, 0);
-  const matWithHandling = matUserTotal * 1.31;
-  const subtotal2 = (svc30 * 2) + matWithHandling;
-  const tax = subtotal2 * 0.07;
-  const grandTotal = switchCost + subtotal2 + tax;
+  
+  const serviceCost = svc30 * 2;
+  const subtotal2 = serviceCost + matUserTotal;
+  const totalPreTax = switchCost + subtotal2;
+  const tax = totalPreTax * 0.07;
+  const grandTotal = totalPreTax + tax;
 
   const logoHtml = s.logoUrl 
     ? `<img src="${s.logoUrl}" style="width:52px;height:52px;object-fit:contain;flex-shrink:0;">` 
@@ -589,7 +600,7 @@ function generateMT1HTML(job) {
     <tr>
       <td style="padding-left:40px;padding:3px 0">-รวมเป็นเงิน (ข้อ 1.+2. )</td>
       <td style="text-align:center">เป็นเงิน</td>
-      <td style="text-align:right;padding-right:8px">${fmt(switchCost + subtotal2)} บาท</td>
+      <td style="text-align:right;padding-right:8px">${fmt(totalPreTax)} บาท</td>
     </tr>
     <tr>
       <td style="padding-left:40px;padding:3px 0">-ภาษี 7 %</td>
