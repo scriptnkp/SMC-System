@@ -1,6 +1,6 @@
 // ==========================================
 // Report Engine: จัดการแบบฟอร์ม บร.1 และ มท.1
-// จัด Layout ตามเอกสารอ้างอิงต้นฉบับ กฟภ.
+// จัด Layout แบบ 1:1 กับกระดาษ กฟภ. ต้นฉบับ
 // ==========================================
 
 function printBR1(formData) {
@@ -12,67 +12,78 @@ function printBR1(formData) {
         if(item.itemName) {
             itemsHtml += `
                 <tr>
-                    <td style="text-align:center; padding: 4px;">${index + 1}</td>
-                    <td style="padding: 4px;">${item.itemName}</td>
-                    <td style="text-align:center; padding: 4px;">${item.qty}</td>
+                    <td style="border: 1px solid #000; text-align:center; padding: 4px;">${index + 1}</td>
+                    <td style="border: 1px solid #000; padding: 4px;">${item.itemName}</td>
+                    <td style="border: 1px solid #000; text-align:center; padding: 4px;">${item.qty}</td>
                 </tr>
             `;
         }
     });
 
-    // โครงสร้างเอกสาร บร.1 แบบใหม่ (ตามภาพ)
     const htmlContent = `
-        <div class="gov-report br1-report" style="font-size: 14pt; line-height: 1.6;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                <div style="width: 50%;">การไฟฟ้าส่วนภูมิภาค จังหวัดนครพนม</div>
-                <div style="width: 50%;">
-                    <table style="width: 100%; border: none;">
-                        <tr><td style="border: none; padding: 0;">เลขที่ใบสั่งซ่อม :</td><td style="border: none; padding: 0;">................................................</td></tr>
-                        <tr><td style="border: none; padding: 0;">กฟฟ.</td><td style="border: none; padding: 0;">กฟจ.นครพนม</td></tr>
-                        <tr><td style="border: none; padding: 0;">เจ้าหน้าที่ผู้ประมาณการ :</td><td style="border: none; padding: 0;">${formData.staffName}</td></tr>
-                    </table>
-                </div>
-            </div>
+        <div style="font-family: 'Sarabun', sans-serif !important; font-size: 15pt; line-height: 1.5; color: #000; width: 100%;">
+            <table style="width: 100%; border: none; margin-bottom: 10px;">
+                <tr>
+                    <td style="width: 50%; vertical-align: top; border: none; padding: 0;">
+                        การไฟฟ้าส่วนภูมิภาค จังหวัดนครพนม
+                    </td>
+                    <td style="width: 50%; vertical-align: top; border: none; padding: 0;">
+                        <table style="width: 100%; border: none;">
+                            <tr>
+                                <td style="border: none; padding: 0; width: 40%;">เลขที่ใบสั่งซ่อม :</td>
+                                <td style="border: none; padding: 0;">...................................................</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none; padding: 0;">กฟฟ.</td>
+                                <td style="border: none; padding: 0;">กฟจ.นครพนม</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none; padding: 0;">เจ้าหน้าที่ผู้ประมาณการ :</td>
+                                <td style="border: none; padding: 0;">${formData.staffName}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
 
             <div style="text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 5px;">
                 ใบประมาณการค่าใช้จ่ายบริการแก้ไขไฟฟ้าขัดข้อง (บร.1)
             </div>
             
-            <div style="text-align: right; margin-bottom: 15px;">
+            <div style="text-align: right; margin-bottom: 10px;">
                 วันที่: ${formatThaiDate(formData.serviceDate)}
             </div>
 
-            <div style="font-weight: bold; text-decoration: underline; margin-bottom: 10px;">ผู้รับบริการ</div>
-            <div style="margin-left: 20px; margin-bottom: 20px;">
-                <table style="width: 100%; border: none; margin-bottom: 5px;">
-                    <tr>
-                        <td style="border: none; padding: 2px 0;">1.) ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ : ${formData.customerName}</td>
-                        <td style="border: none; padding: 2px 0;">โทร ${formData.phone}</td>
-                    </tr>
-                </table>
+            <div style="font-weight: bold; text-decoration: underline; margin-bottom: 5px;">ผู้รับบริการ</div>
+            <table style="width: 100%; border: none; margin-bottom: 5px; margin-left: 20px;">
+                <tr>
+                    <td style="border: none; padding: 0; width: 60%;">1.) ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ : ${formData.customerName}</td>
+                    <td style="border: none; padding: 0; width: 40%;">โทร ${formData.phone}</td>
+                </tr>
+            </table>
+            
+            <div style="margin-left: 20px;">
                 <div style="margin-bottom: 5px;">2.) หมายเลขมิเตอร์ PEA. / NO : ${formData.meterNo}</div>
                 <div style="margin-bottom: 5px;">
-                    -ใบ บร.1 / เล่มที่ ${formData.br1Info.split('/')[0] || '..........'} 
-                    เลขที่ : ${formData.br1Info.split('/')[1] || '..........'} 
+                    -ใบ บร.1 / เล่มที่ ${formData.br1Info.split('/')[0] || '..........'} เลขที่ : ${formData.br1Info.split('/')[1] || '..........'} 
                     ให้บริการเมื่อวันที่ ${formatThaiDate(formData.serviceDate)}
                 </div>
                 <div style="margin-bottom: 5px;">
-                    - ตั้งแต่เวลา : ${formData.timeStart} น. 
-                    ถึงเวลา : ${formData.timeEnd} น. 
-                    รวมเวลาปฏิบัติงาน ${formData.totalHours} ชั่วโมง
+                    - ตั้งแต่เวลา : ${formData.timeStart} น. ถึงเวลา : ${formData.timeEnd} น. 
+                    รวมเวลาปฏิบัติงาน ${formData.totalHours}
                 </div>
-                <div>
+                <div style="margin-bottom: 15px;">
                     3.) พชง/ผู้ให้บริการ (ชื่อ - สกุล) : ${formData.staffName} 
-                    <span style="margin-left: 20px;">รวมผู้ปฏิบัติงาน จำนวน ..... คน</span>
+                    <span style="margin-left: 30px;">รวมผู้ปฏิบัติงาน จำนวน ..... คน</span>
                 </div>
             </div>
 
-            <div style="font-weight: bold; text-decoration: underline; margin-bottom: 10px;">รายการปฏิบัติงาน</div>
-            <div style="margin-left: 20px; margin-bottom: 20px;">
-                <div style="margin-bottom: 10px;">
+            <div style="font-weight: bold; text-decoration: underline; margin-bottom: 5px;">รายการปฏิบัติงาน</div>
+            <div style="margin-left: 20px; margin-bottom: 15px;">
+                <div style="margin-bottom: 5px;">
                     <span style="font-size: 16pt;">☑</span> ข้อ ก. งานตรวจสอบและแก้ไขไฟฟ้าขัดข้อง 
-                    <span style="margin-left: 30px;"><span style="font-size: 16pt;">☐</span> ด้านแรงสูง</span>
-                    <span style="margin-left: 15px;"><span style="font-size: 16pt;">☑</span> ด้านแรงต่ำ</span>
+                    <span style="margin-left: 40px;"><span style="font-size: 16pt;">☐</span> ด้านแรงสูง</span>
+                    <span style="margin-left: 20px;"><span style="font-size: 16pt;">☑</span> ด้านแรงต่ำ</span>
                 </div>
                 
                 <table style="width: 100%; border: none;">
@@ -85,31 +96,30 @@ function printBR1(formData) {
                         <td style="border: none; padding: 2px 0; text-align: right;">เป็นเงิน ${formData.serviceFee.toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</td>
                     </tr>
                     <tr>
-                        <td style="border: none; padding: 2px 0; padding-left: 20px; color: #555;">- สำหรับ 30 นาทีแรก 285 บาท</td>
+                        <td style="border: none; padding: 0 0 0 20px; color: #333;">- สำหรับ 30 นาทีแรก 285 บาท</td>
                         <td style="border: none;"></td>
                     </tr>
                     <tr>
-                        <td style="border: none; padding: 2px 0; padding-left: 20px; color: #555;">- สำหรับครึ่งชั่วโมงต่อไป (ช่วงละ 285 บาท)</td>
+                        <td style="border: none; padding: 0 0 0 20px; color: #333;">- สำหรับครึ่งชั่วโมงต่อไป</td>
                         <td style="border: none;"></td>
                     </tr>
                     <tr>
-                        <td style="border: none; padding: 10px 0; font-weight: bold;">รวมค่าแรงและบริการตรวจสอบแก้ไข</td>
-                        <td style="border: none; padding: 10px 0; text-align: right; font-weight: bold; text-decoration: underline;">เป็นเงิน ${(formData.switchFee + formData.serviceFee).toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</td>
+                        <td style="border: none; padding: 5px 0; font-weight: bold; padding-left: 20px;">รวมค่าแรงและบริการตรวจสอบแก้ไข</td>
+                        <td style="border: none; padding: 5px 0; text-align: right; font-weight: bold;">เป็นเงิน ${(formData.switchFee + formData.serviceFee).toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</td>
                     </tr>
                 </table>
             </div>
 
-            <div style="font-weight: bold; text-decoration: underline; margin-bottom: 10px;">รายการพัสดุ</div>
-            <div style="margin-left: 20px; margin-bottom: 15px;">
+            <div style="font-weight: bold; text-decoration: underline; margin-bottom: 5px;">รายการพัสดุ</div>
+            <div style="margin-left: 20px; margin-bottom: 10px;">
                 <div>ข้อ ข. อุปกรณ์ที่ กฟภ. นำมาใช้ในการแก้ไขกระแสไฟฟ้าขัดข้องให้ (ลูกค้า / ผู้ใช้ไฟ)</div>
-                <div style="padding-left: 30px; font-size: 13pt; color: #333;">
+                <div style="padding-left: 30px; font-size: 14pt;">
                     (1.) ทำราคาพัสดุ กฟภ. ให้เป็นราคาผู้ใช้ไฟ (บวก 15%)<br>
-                    (2.) ค่าดำเนินการบวก 31% <br>
-                    <small><i>* รวมคิดราคาพัสดุ + 40% เรียบร้อยแล้ว</i></small>
+                    (2.) ค่าดำเนินการบวก 31%
                 </div>
             </div>
 
-            <table class="report-data-table" style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
                 <thead>
                     <tr>
                         <th style="border: 1px solid #000; width: 10%; text-align:center; padding: 5px;">ลำดับ</th>
@@ -122,12 +132,12 @@ function printBR1(formData) {
                 </tbody>
             </table>
 
-            <div style="text-align: right; margin-top: 10px; margin-bottom: 20px;">
+            <div style="text-align: right; margin-bottom: 15px;">
                 เป็นเงิน ${formData.materialsFee.toLocaleString('en-US', {minimumFractionDigits: 2})} บาท
             </div>
 
-            <div style="text-align: right; font-size: 16pt; font-weight: bold; border-top: 2px solid #000; padding-top: 10px;">
-                รวมเป็นเงินทั้งสิ้น <span style="text-decoration: underline; margin-left: 20px;">${formData.totalBr1.toLocaleString('en-US', {minimumFractionDigits: 2})}</span> บาท
+            <div style="text-align: right; font-size: 16pt; font-weight: bold;">
+                รวมเป็นเงินทั้งสิ้น <span style="margin-left: 20px;">${formData.totalBr1.toLocaleString('en-US', {minimumFractionDigits: 2})}</span> บาท
             </div>
         </div>
     `;
@@ -142,53 +152,55 @@ function printMT1(formData) {
     
     // คำนวณตามสูตร มท.1
     const mt1Section2 = formData.serviceFee + formData.materialsFee; 
-    const subTotal = formData.switchFee + mt1Section2; // (ข้อ 1 + 2)
-    const vat = subTotal * 0.07; // ภาษี 7%
-    const totalGrand = subTotal + vat; // สรุปรวม
+    const subTotal = formData.switchFee + mt1Section2; 
+    const vat = subTotal * 0.07; 
+    const totalGrand = subTotal + vat; 
 
-    // โครงสร้างเอกสาร มท.1 แบบใหม่ (ตามภาพ)
     const htmlContent = `
-        <div class="gov-report mt1-report" style="font-size: 15pt; line-height: 1.6;">
+        <div style="font-family: 'Sarabun', sans-serif !important; font-size: 16pt; line-height: 1.6; color: #000; width: 100%;">
             <div style="text-align: center; margin-bottom: 25px;">
                 <div style="font-size: 18pt; font-weight: bold;">การไฟฟ้าส่วนภูมิภาค</div>
-                <div style="font-size: 12pt;">PROVINCIAL ELECTRICITY AUTHORITY</div>
+                <div style="font-size: 14pt;">PROVINCIAL ELECTRICITY AUTHORITY</div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-                <div style="width: 50%;">ที่ มท 5306.46/นพ.</div>
-                <div style="width: 50%; text-align: left; padding-left: 10%;">
-                    <div>การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม</div>
-                    <div>3 ถนนอรัญญิกาวาส ต.ในเมือง</div>
-                    <div>อำเภอเมือง จังหวัดนครพนม 48000</div>
-                </div>
-            </div>
+            <table style="width: 100%; border: none; margin-bottom: 30px;">
+                <tr>
+                    <td style="width: 50%; border: none; vertical-align: top;">
+                        ที่ มท 5306.46/นพ.
+                    </td>
+                    <td style="width: 50%; border: none; vertical-align: top; padding-left: 10%;">
+                        การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม<br>
+                        3 ถนนอรัญญิกาวาส ต.ในเมือง<br>
+                        อำเภอเมือง จังหวัดนครพนม 48000
+                    </td>
+                </tr>
+            </table>
 
             <div style="text-align: center; margin-bottom: 30px;">
                 ${formatThaiDate(formData.serviceDate)}
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <table style="width: 100%; border: none;">
-                    <tr>
-                        <td style="border: none; width: 10%; vertical-align: top;"><strong>เรื่อง</strong></td>
-                        <td style="border: none;">แจ้งค่าบริการแก้กระแสไฟฟ้าขัดข้อง</td>
-                    </tr>
-                    <tr>
-                        <td style="border: none; vertical-align: top; padding-top: 10px;"><strong>เรียน</strong></td>
-                        <td style="border: none; padding-top: 10px;">${formData.customerName}</td>
-                    </tr>
-                </table>
-            </div>
+            <table style="width: 100%; border: none; margin-bottom: 20px;">
+                <tr>
+                    <td style="border: none; width: 10%; vertical-align: top; font-weight: bold;">เรื่อง</td>
+                    <td style="border: none;">แจ้งค่าบริการแก้กระแสไฟฟ้าขัดข้อง</td>
+                </tr>
+                <tr>
+                    <td style="border: none; vertical-align: top; padding-top: 10px; font-weight: bold;">เรียน</td>
+                    <td style="border: none; padding-top: 10px;">${formData.customerName}</td>
+                </tr>
+            </table>
 
             <div style="text-indent: 2.5cm; text-align: justify; margin-bottom: 30px; line-height: 1.8;">
                 ด้วยในวันที่ ${formatThaiDate(formData.serviceDate)} เวลา ${formData.timeStart} น. ถึงเวลา ${formData.timeEnd} น.
-                การไฟฟ้าส่วนภูมิภาค จังหวัดนครพนม ได้บริการแก้กระแสไฟฟ้าขัดข้องให้แก่ หมายเลขผู้ใช้ไฟ ${formData.meterNo} 
-                พร้อมออกหลักฐาน ใบบริการแก้ไขกระแสไฟฟ้าขัดข้อง ใบ บร.1 เล่มที่ ${formData.br1Info.split('/')[0] || '.......'} 
-                เลขที่ ${formData.br1Info.split('/')[1] || '.......'} เพื่อเรียกเก็บค่าใช้จ่ายในภายหลังนั้น 
-                บัดนี้ การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม ได้ตรวจสอบประมาณการแล้วมีค่าใช้จ่าย ดังนี้
+                การไฟฟ้าส่วนภูมิภาค จังหวัดนครพนม ได้บริการแก้กระแสไฟฟ้าขัดข้องให้แก่
+                หมายเลขผู้ใช้ไฟ ${formData.meterNo} พร้อมออกหลักฐาน ใบบริการแก้ไขกระแสไฟฟ้าขัดข้อง ใบ บร.1
+                เล่มที่ ${formData.br1Info.split('/')[0] || '.......'} เลขที่ ${formData.br1Info.split('/')[1] || '.......'} 
+                เพื่อเรียกเก็บค่าใช้จ่ายในภายหลังนั้น บัดนี้ การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม
+                ได้ตรวจสอบประมาณการแล้วมีค่าใช้จ่าย ดังนี้
             </div>
 
-            <div style="margin-left: 10%; width: 85%; margin-bottom: 30px;">
+            <div style="margin-left: 5%; width: 90%; margin-bottom: 40px;">
                 <table style="width: 100%; border: none; line-height: 1.8;">
                     <tr>
                         <td style="border: none;">1.) ค่าปลด-สับอุปกรณ์ตัดตอน</td>
@@ -213,7 +225,7 @@ function printMT1(formData) {
                     <tr>
                         <td style="border: none; font-weight: bold; padding-top: 10px;">- สรุป (ข้อ 1.+2.) รวมค่าใช้จ่ายทั้งหมด</td>
                         <td style="border: none; font-weight: bold; text-align: right; padding-top: 10px;">รวมเป็นเงิน</td>
-                        <td style="border: none; font-weight: bold; text-align: right; padding-top: 10px; text-decoration: underline double;">${totalGrand.toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</td>
+                        <td style="border: none; font-weight: bold; text-align: right; padding-top: 10px;">${totalGrand.toLocaleString('en-US', {minimumFractionDigits: 2})} บาท</td>
                     </tr>
                 </table>
             </div>
@@ -222,13 +234,16 @@ function printMT1(formData) {
                 ( ${BAHTTEXT(totalGrand)} )
             </div>
 
-            <div style="display: flex; justify-content: flex-end;">
-                <div style="text-align: center;">
-                    <div>ลงชื่อ............................................................</div>
-                    <div style="margin-top: 5px;">( ${formData.staffName} )</div>
-                    <div style="margin-top: 5px;">ตำแหน่ง เจ้าหน้าที่ผู้ประมาณการ กฟภ. นครพนม</div>
-                </div>
-            </div>
+            <table style="width: 100%; border: none;">
+                <tr>
+                    <td style="width: 50%; border: none;"></td>
+                    <td style="width: 50%; border: none; text-align: center; line-height: 1.8;">
+                        ลงชื่อ............................................................<br>
+                        ( ${formData.staffName} )<br>
+                        ตำแหน่ง เจ้าหน้าที่ผู้ประมาณการ กฟภ. นครพนม
+                    </td>
+                </tr>
+            </table>
         </div>
     `;
 
@@ -236,7 +251,6 @@ function printMT1(formData) {
     window.print();
 }
 
-// ---------------- Helper Functions ----------------
 function formatThaiDate(dateStr) {
     if (!dateStr) return '................................';
     const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
