@@ -388,7 +388,11 @@ async function renderHistory() {
         <td class="hide-mobile">${j.customer_name||'-'}</td>
         <td>${j.technician||j.profiles?.full_name||'-'}</td>
         <td class="tr"><strong>${fmt(j.grand_total)}</strong></td>
-        <td class="tc hide-mobile">${j.job_materials?.length||0}</td>
+        <td class="tc hide-mobile">
+          ${j.job_materials?.length 
+           ? `<button class="badge b-primary" style="cursor:pointer; border:none;" onclick="viewMaterials('${j.id}')">${j.job_materials.length} รายการ</button>` 
+           : '-'}
+        </td>
         <td class="tc hide-mobile"><span class="badge b-success">เสร็จสิ้น</span></td>
         <td><div class="td-actions">
           ${mine?`<button class="btn-icon btn-sm" onclick="editFromHistory('${j.id}')" title="แก้ไข"><i class="ti ti-edit"></i></button>`:''}
@@ -420,6 +424,30 @@ async function confirmDel(id) {
 }
 
 function filterHistory() { renderHistory(); }
+
+// ฟังก์ชันเปิดดูรายการพัสดุ
+async function viewMaterials(id) {
+  const jobs = await fetchJobs({}); 
+  const job = jobs.find(x => x.id === id);
+  if (!job || !job.job_materials || job.job_materials.length === 0) return;
+  
+  const tbody = document.getElementById('mat-modal-tbody');
+  tbody.innerHTML = job.job_materials.map((m, i) => `
+    <tr>
+      <td class="tc">${i + 1}</td>
+      <td><span style="font-size:12px;color:#64748b">${m.code}</span></td>
+      <td>${m.name}</td>
+      <td class="tc"><strong>${m.qty}</strong> ${m.unit || 'EA'}</td>
+    </tr>
+  `).join('');
+  
+  document.getElementById('mat-modal-overlay').classList.add('open');
+}
+
+// ฟังก์ชันปิดหน้าต่าง
+function closeMatModal() {
+  document.getElementById('mat-modal-overlay').classList.remove('open');
+}
 
 // ── DASHBOARD ─────────────────────────
 async function renderDashboard() {
