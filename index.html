@@ -260,6 +260,29 @@
             <span>รวมทั้งสิ้น</span><span id="c-grand">-</span>
           </div>
         </div>
+
+        <div id="mat-modal-overlay" class="modal-overlay">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-head">
+      <div class="modal-title"><i class="ti ti-box"></i> รายการพัสดุที่ใช้</div>
+      <button class="modal-close" onclick="closeMatModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="table-wrap">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th style="width:120px">รหัส</th>
+            <th>ชื่อพัสดุ</th>
+            <th style="width:80px" class="tc">จำนวน</th>
+          </tr>
+        </thead>
+        <tbody id="mat-modal-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+        
       </div>
 
       <div class="action-bar">
