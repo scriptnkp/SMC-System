@@ -94,16 +94,18 @@ async function saveJobToDB(job, materials) {
     switch_cost: job.switchCost, service_cost: job.serviceCost, svc_30min: job.svc30min,
     mat_user_total: job.matUserTotal, mat_handling: job.matHandling,
     subtotal2: job.subtotal2, tax: job.tax, grand_total: job.grandTotal,
-    status: 'active', updated_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 
   let jobId = job.id;
   if (isNew) {
+    payload.status = 'unpaid'; // ใบงานใหม่ เริ่มต้นเป็น "ยังไม่จ่าย" เสมอ
     payload.created_by = currentUser.id;
     const { data, error } = await db.from('jobs').insert(payload).select().single();
     if (error) throw error;
     jobId = data.id;
   } else {
+    // ถ้าเป็นการอัปเดต จะไม่แตะต้องคอลัมน์ status
     const { error } = await db.from('jobs').update(payload).eq('id', jobId);
     if (error) throw error;
     await db.from('job_materials').delete().eq('job_id', jobId);
@@ -122,8 +124,11 @@ async function saveJobToDB(job, materials) {
   return jobId;
 }
 
-async function deleteJobFromDB(id) {
-  const { error } = await db.from('jobs').delete().eq('id', id);
+// ── ฟังก์ชันอัปเดตสถานะการจ่ายเงินลงฐานข้อมูล ──
+async function updateJobStatus(id, status) {
+  const { error } = await db.from('jobs')
+    .update({ status: status, updated_at: new Date().toISOString() })
+    .eq('id', id);
   if (error) throw error;
 }
 

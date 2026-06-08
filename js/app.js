@@ -417,7 +417,16 @@ async function renderHistory() {
             ? `<button type="button" class="badge b-primary" style="cursor:pointer; border:none;" onclick="window.viewMaterials('${j.id}', this)">${j.job_materials.length} รายการ</button>` 
             : '-'}
         </td>
-        <td class="tc hide-mobile"><span class="badge b-success">เสร็จสิ้น</span></td>
+        <td class="tc hide-mobile">
+          ${isAdmin() 
+          ? `<button type="button" class="badge ${j.status === 'paid' ? 'b-success' : 'b-warning'}" style="cursor:pointer; border:none;" onclick="window.togglePaymentStatus('${j.id}', '${j.status || 'unpaid'}', this)">
+          ${j.status === 'paid' ? 'จ่ายแล้ว' : 'ยังไม่จ่าย'}
+          </button>`
+          : `<span class="badge ${j.status === 'paid' ? 'b-success' : 'b-warning'}">
+         ${j.status === 'paid' ? 'จ่ายแล้ว' : 'ยังไม่จ่าย'}
+       </span>`
+  }
+</td>
         <td><div class="td-actions">
           ${mine?`<button class="btn-icon btn-sm" onclick="editFromHistory('${j.id}')" title="แก้ไข"><i class="ti ti-edit"></i></button>`:''}
           <button class="btn-icon btn-sm" onclick="viewFromHistory('${j.id}')" title="ดูเอกสาร"><i class="ti ti-file-text"></i></button>
@@ -486,7 +495,7 @@ async function renderDashboard() {
         <td>${thaiDate(j.date)}</td><td>${j.br1_no||'-'}</td>
         <td>${j.meter_no||'-'}</td><td>${j.technician||'-'}</td>
         <td class="tr">${fmt(j.grand_total)}</td>
-        <td class="tc"><span class="badge b-success">เสร็จสิ้น</span></td>
+        <td class="tc"><span class="badge ${j.status === 'paid' ? 'b-success' : 'b-warning'}">${j.status === 'paid' ? 'จ่ายแล้ว' : 'ยังไม่จ่าย'}</span></td>
       </tr>`).join('')||`<tr><td colspan="6" style="text-align:center;color:#aaa;padding:16px">ยังไม่มีข้อมูล</td></tr>`;
   } catch(e) { showToast('โหลด Dashboard ไม่สำเร็จ','error'); }
 }
@@ -791,4 +800,26 @@ window.viewMaterials = async function(id, btn) {
 
 window.closeMatModal = function() {
   document.getElementById('mat-modal-overlay').classList.remove('open');
+};
+
+// ── ฟังก์ชันเปลี่ยนสถานะการจ่ายเงิน (Admin เท่านั้น) ──
+window.togglePaymentStatus = async function(id, currentStatus, btn) {
+  if (!isAdmin()) return;
+  // สลับค่า: ถ้าจ่ายแล้ว -> กลับไปเป็นยังไม่จ่าย, ถ้ายังไม่จ่าย -> เป็นจ่ายแล้ว
+  const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
+  
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="ti ti-loader"></i>...';
+  btn.disabled = true;
+
+  try {
+    await updateJobStatus(id, newStatus);
+    showToast(newStatus === 'paid' ? 'อัพเดทสถานะ: จ่ายแล้ว' : 'อัพเดทสถานะ: ยังไม่จ่าย', 'success');
+    renderHistory(); // โหลดตารางใหม่เพื่อให้ข้อมูลอัปเดตทันที
+  } catch(err) {
+    console.error(err);
+    showToast('เกิดข้อผิดพลาดในการอัพเดทสถานะ', 'error');
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
 };
