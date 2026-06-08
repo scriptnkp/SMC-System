@@ -280,7 +280,7 @@ function calcTotals() {
   const sw  = parseFloat(s.switch_cost)   || 570;
   const s30 = parseFloat(s.service_30min) || 285;
   const mu  = br1MatRows.reduce((sum,r) => sum + calcUserPrice(r.basePrice)*r.qty, 0);
-  const mh  = mu * 1.31;
+  const mh  = mu;
   const sv  = s30 * 2;
   const st2 = sv + mh;
   const tx  = st2 * 0.07;
@@ -300,7 +300,7 @@ async function saveCurrentJob() {
   const s  = getSettings();
   const sw = parseFloat(s.switch_cost)||570, s30 = parseFloat(s.service_30min)||285;
   const mu = br1MatRows.reduce((sum,r)=>sum+calcUserPrice(r.basePrice)*r.qty,0);
-  const mh = Math.round(mu*1.31*100)/100;
+  const mh = mu;
   const st2= Math.round((s30*2+mh)*100)/100;
   const tx = Math.round(st2*.07*100)/100;
   const gd = Math.round((sw+st2+tx)*100)/100;
@@ -518,7 +518,7 @@ function generateBR1HTML(job) {
   const s30 = parseFloat(job.svc_30min||s.service_30min)||285;
   const ms  = job.job_materials||[];
   const mu  = ms.reduce((sum,m)=>sum+parseFloat(m.user_price||0),0);
-  const mh  = mu*1.31, sv=s30*2, st2=sv+mh, tx=st2*.07, gd=sw+st2+tx;
+  const mh  = mu, sv=s30*2, st2=sv+mh, tx=st2*.07, gd=sw+st2+tx;
   const wH  = (job.work_type||'high')!=='low', wL=job.work_type==='low'||job.work_type==='both';
 
   const rows = ms.map((m,i)=>`<tr>
@@ -585,7 +585,7 @@ function generateBR1HTML(job) {
   </div>
   <b>รายการพัสดุ</b>
   <div style="font-size:12.5px;font-weight:600;margin:4px 0 2px">ข้อ ข. อุปกรณ์ที่ กฟภ. นำมาใช้ในการแก้ไขกระแสไฟฟ้าขัดข้อง</div>
-  <div style="font-size:11.5px;color:#555;margin-bottom:5px">( 1.) ราคาผู้ใช้ไฟ (บวก 15%) &nbsp; ( 2.) ค่าดำเนินการบวก 31%</div>
+  <div style="font-size:11.5px;color:#555;margin-bottom:5px">( 1.) ราคาผู้ใช้ไฟ (บวก 40%)</div>
   <table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0">
     <thead><tr>
       <th style="background:#e0e0e0;border:1px solid #888;padding:5px;width:26px">ที่</th>
@@ -652,7 +652,7 @@ function generateMT1HTML(job) {
   const s30 = parseFloat(job.svc_30min||s.service_30min)||285;
   const ms  = job.job_materials||[];
   const mu  = ms.reduce((sum,m)=>sum+parseFloat(m.user_price||0),0);
-  const st2 = s30*2+mu*1.31, tx=st2*.07, gd=sw+st2+tx;
+  const st2 = s30*2+mu, tx=st2*.07, gd=sw+st2+tx;
   return `<div style="line-height:2;font-size:13.5px;color:#111">
   <div style="display:flex;align-items:flex-start;margin-bottom:16px">
     <div style="display:flex;align-items:center;gap:10px;min-width:175px">
