@@ -6,14 +6,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>PEA NKP</title>
-  <!-- Font via link (not @import — more reliable across browsers) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Critical display states -->
   <style>
     #login-screen.hide { display:none !important; }
     #app-wrapper { display:none; }
@@ -22,9 +20,6 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════
-     LOGIN SCREEN
-════════════════════════════════════════ -->
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo-wrap">
@@ -36,7 +31,6 @@
       <div class="login-sub">จังหวัดนครพนม · ระบบจัดการใบบริการ</div>
     </div>
 
-    <!-- Employee ID -->
     <div class="login-field">
       <label>รหัสพนักงาน (6-7 หลัก)</label>
       <input type="text" id="login-empid" class="login-input"
@@ -52,13 +46,9 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     APP WRAPPER
-════════════════════════════════════════ -->
 <div id="sidebar-overlay"></div>
 <div id="app-wrapper">
 
-<!-- SIDEBAR -->
 <aside id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-circle" id="sidebar-logo-default">กฟภ.</div>
@@ -107,9 +97,7 @@
   </div>
 </aside>
 
-<!-- MAIN -->
 <div id="main">
-  <!-- TOPBAR -->
   <div class="topbar">
     <button id="hamburger" class="topbar-hamburger"><i class="ti ti-menu-2"></i></button>
     <div class="topbar-title" id="topbar-title">แดชบอร์ด</div>
@@ -119,7 +107,6 @@
     </div>
   </div>
 
-  <!-- ── DASHBOARD ── -->
   <div id="page-dashboard" class="page active">
     <div class="stats-grid">
       <div class="stat-card c-blue">
@@ -169,7 +156,6 @@
     </div>
   </div>
 
-  <!-- ── BR1 FORM ── -->
   <div id="page-br1" class="page">
     <form id="br1-form" onsubmit="return false">
 
@@ -178,8 +164,8 @@
         <div class="form-grid">
           <div class="form-group"><label>วันที่ออกเอกสาร</label><input type="date" id="f-date" class="field"></div>
           <div class="form-group"><label>วันที่ให้บริการ</label><input type="date" id="f-service-date" class="field"></div>
-          <div class="form-group"><label>เวลาเริ่ม</label><input type="time" id="f-time-start" class="field"></div>
-          <div class="form-group"><label>เวลาสิ้นสุด</label><input type="time" id="f-time-end" class="field"></div>
+          <div class="form-group"><label>เวลาเริ่ม</label><input type="time" id="f-time-start" class="field" onchange="calcTotals()"></div>
+          <div class="form-group"><label>เวลาสิ้นสุด</label><input type="time" id="f-time-end" class="field" onchange="calcTotals()"></div>
           <div class="form-group"><label>เลขที่ บร.1</label><input type="text" id="f-br1-no" class="field" placeholder="390198" inputmode="numeric"></div>
           <div class="form-group"><label>เล่มที่</label><input type="text" id="f-book-no" class="field" inputmode="numeric"></div>
         </div>
@@ -237,7 +223,6 @@
         </div>
       </div>
 
-      <!-- SUMMARY -->
       <div class="card">
         <div class="card-title"><i class="ti ti-calculator"></i>สรุปค่าใช้จ่าย</div>
         <div style="max-width:440px;margin-left:auto">
@@ -248,7 +233,7 @@
             <span style="color:var(--muted)">2.) ค่าตรวจสอบ + แก้ไข + พัสดุ</span><strong id="c-st2">-</strong>
           </div>
           <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12.5px;color:var(--muted)">
-            <span style="padding-left:14px">· ค่าบริการ (2×30 นาที)</span><span id="c-service">-</span>
+            <span style="padding-left:14px" id="lbl-service">· ค่าบริการ (2×30 นาที)</span><span id="c-service">-</span>
           </div>
           <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bg);font-size:12.5px;color:var(--muted)">
             <span style="padding-left:14px">· พัสดุ+40%</span><span id="c-mat-h">-</span>
@@ -260,29 +245,6 @@
             <span>รวมทั้งสิ้น</span><span id="c-grand">-</span>
           </div>
         </div>
-
-        <div id="mat-modal-overlay" class="modal-overlay">
-  <div class="modal" style="max-width: 600px;">
-    <div class="modal-head">
-      <div class="modal-title"><i class="ti ti-box"></i> รายการพัสดุที่ใช้</div>
-      <button class="modal-close" onclick="closeMatModal()"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="table-wrap">
-      <table class="dt">
-        <thead>
-          <tr>
-            <th style="width:40px">#</th>
-            <th style="width:120px">รหัส</th>
-            <th>ชื่อพัสดุ</th>
-            <th style="width:80px" class="tc">จำนวน</th>
-          </tr>
-        </thead>
-        <tbody id="mat-modal-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-        
       </div>
 
       <div class="action-bar">
@@ -293,7 +255,6 @@
     </form>
   </div>
 
-  <!-- ── HISTORY ── -->
   <div id="page-history" class="page">
     <div class="card">
       <div class="card-title"><i class="ti ti-history"></i>ประวัติการแจ้งซ่อม</div>
@@ -332,7 +293,6 @@
     </div>
   </div>
 
-  <!-- ── USERS (Admin) ── -->
   <div id="page-users" class="page admin-only" style="display:none">
     <div class="card">
       <div class="card-title"><i class="ti ti-users-group"></i>จัดการผู้ใช้งาน</div>
@@ -351,9 +311,7 @@
     </div>
   </div>
 
-  <!-- ── SETTINGS ── -->
   <div id="page-settings" class="page">
-    <!-- Logo -->
     <div class="card">
       <div class="card-title"><i class="ti ti-photo"></i>โลโก้หน่วยงาน</div>
       <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
@@ -382,7 +340,6 @@
         </div>
       </div>
     </div>
-    <!-- Org info -->
     <div class="card">
       <div class="card-title"><i class="ti ti-building"></i>ข้อมูลหน่วยงาน <span class="admin-only badge b-admin" style="display:none">Admin เท่านั้น</span></div>
       <div class="form-grid">
@@ -395,7 +352,6 @@
         <div class="form-group"><label>เล่มที่เริ่มต้น</label><input type="text" id="s-book-no" class="field" inputmode="numeric"></div>
       </div>
     </div>
-    <!-- Service cost -->
     <div class="card">
       <div class="card-title"><i class="ti ti-coin"></i>ค่าบริการมาตรฐาน <span class="admin-only badge b-admin" style="display:none">Admin เท่านั้น</span></div>
       <div class="form-grid-2">
@@ -403,7 +359,6 @@
         <div class="form-group"><label>ค่าบริการต่อ 30 นาที (บาท)</label><input type="number" id="s-service-30min" class="field" step="0.01" inputmode="decimal"></div>
       </div>
     </div>
-    <!-- CSV -->
     <div class="card">
       <div class="card-title"><i class="ti ti-table-import"></i>อัพเดทราคามาตรฐาน (CSV)</div>
       <p style="font-size:13.5px;color:var(--muted);margin-bottom:12px">
@@ -420,10 +375,28 @@
     </div>
   </div>
 
-</div><!-- /main -->
-</div><!-- /app-wrapper -->
+</div></div><div id="mat-modal-overlay" class="modal-overlay">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-head">
+      <div class="modal-title"><i class="ti ti-box"></i> รายการพัสดุที่ใช้</div>
+      <button class="modal-close" onclick="closeMatModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="table-wrap">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th style="width:120px">รหัส</th>
+            <th>ชื่อพัสดุ</th>
+            <th style="width:80px" class="tc">จำนวน</th>
+          </tr>
+        </thead>
+        <tbody id="mat-modal-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-<!-- PDF OVERLAY -->
 <div id="pdf-overlay">
   <div class="pdf-bar">
     <button class="btn btn-ghost btn-sm" onclick="switchDoc('br1')" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)"><i class="ti ti-file-description"></i>บร.1</button>

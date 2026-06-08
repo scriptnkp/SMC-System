@@ -6,16 +6,29 @@ let br1MatRows      = [];
 let _previewJob     = null;
 window._cachedSettings = {};
 
+// ── ฟังก์ชันคำนวณบล็อกเวลา ───────────────────────
+function getServiceCalc(start, end, s30) {
+  if (!start || !end) return { sv: s30 * 2, blocks: 2 };
+  const [sh,sm] = start.split(':').map(Number);
+  const [eh,em] = end.split(':').map(Number);
+  const m = (eh*60+em) - (sh*60+sm);
+  
+  if (isNaN(m) || m <= 0) return { sv: s30 * 2, blocks: 2 };
+  
+  if (m <= 30) return { sv: s30, blocks: 1 };
+  
+  const extraBlocks = Math.ceil((m - 30) / 30);
+  return { sv: s30 + (extraBlocks * s30), blocks: 1 + extraBlocks };
+}
+
 // ── INIT ──────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  // Show login immediately — don't wait for async
   showLoginScreen();
   await loadMaterials();
   try {
     await initAuth();
   } catch(e) {
     console.error('Auth init failed:', e);
-    // Supabase SDK might not be loaded (offline / file://)
     document.getElementById('login-err').textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต';
   }
   setupHamburger();
@@ -48,10 +61,8 @@ function showLoginScreen() {
 function showApp() {
   document.getElementById('login-screen').classList.add('hide');
   document.getElementById('app-wrapper').classList.add('show');
-  // Topbar chip
   if (currentProfile) {
     setText('topbar-user', `${currentProfile.full_name} (${currentProfile.employee_id})`);
-    // Sidebar user
     setText('sidebar-user-name', currentProfile.full_name);
     setText('sidebar-user-role', currentProfile.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ช่าง');
     setText('sidebar-user-emp',  `รหัส ${currentProfile.employee_id}`);
@@ -68,7 +79,7 @@ function showApp() {
 }
 
 // ── LOGIN ─────────────────────────────
-function resetPin() {} // kept for compatibility
+function resetPin() {} 
 
 async function handleLogin() {
   const empId = getVal('login-empid').trim();
@@ -281,12 +292,20 @@ function calcTotals() {
   const s30 = parseFloat(s.service_30min) || 285;
   const mu  = br1MatRows.reduce((sum,r) => sum + calcUserPrice(r.basePrice)*r.qty, 0);
   const mh  = mu;
-  const sv  = s30 * 2;
+
+  const tStart = getVal('f-time-start');
+  const tEnd = getVal('f-time-end');
+  const { sv, blocks } = getServiceCalc(tStart, tEnd, s30);
+
   const st2 = sv + mh;
   const tx  = st2 * 0.07;
   const gd  = sw + st2 + tx;
 
   setText('c-switch', fmt(sw));
+  
+  const lbl = document.getElementById('lbl-service');
+  if(lbl) lbl.textContent = `· ค่าบริการ (${blocks}×30 นาที)`;
+  
   setText('c-service', fmt(sv));
   setText('c-mat-u', fmt(mu));
   setText('c-mat-h', fmt(mh));
@@ -301,7 +320,12 @@ async function saveCurrentJob() {
   const sw = parseFloat(s.switch_cost)||570, s30 = parseFloat(s.service_30min)||285;
   const mu = br1MatRows.reduce((sum,r)=>sum+calcUserPrice(r.basePrice)*r.qty,0);
   const mh = mu;
-  const st2= Math.round((s30*2+mh)*100)/100;
+
+  const tStart = getVal('f-time-start');
+  const tEnd = getVal('f-time-end');
+  const { sv } = getServiceCalc(tStart, tEnd, s30);
+
+  const st2= Math.round((sv+mh)*100)/100;
   const tx = Math.round(st2*.07*100)/100;
   const gd = Math.round((sw+st2+tx)*100)/100;
 
@@ -317,7 +341,7 @@ async function saveCurrentJob() {
     meterNo: getVal('f-meter-no'), address: getVal('f-address'),
     technician: getVal('f-technician'), estimator: getVal('f-estimator'),
     workers: getVal('f-workers')||'1', workType: getVal('f-work-type')||'high',
-    switchCost: sw, svc30min: s30, serviceCost: s30*2,
+    switchCost: sw, svc30min: s30, serviceCost: sv,
     matUserTotal: Math.round(mu*100)/100, matHandling: mh,
     subtotal2: st2, tax: tx, grandTotal: gd,
   };
@@ -390,8 +414,8 @@ async function renderHistory() {
         <td class="tr"><strong>${fmt(j.grand_total)}</strong></td>
         <td class="tc hide-mobile">
           ${j.job_materials?.length 
-           ? `<button class="badge b-primary" style="cursor:pointer; border:none;" onclick="viewMaterials('${j.id}')">${j.job_materials.length} รายการ</button>` 
-           : '-'}
+            ? `<button type="button" class="badge b-primary" style="cursor:pointer; border:none;" onclick="window.viewMaterials('${j.id}', this)">${j.job_materials.length} รายการ</button>` 
+            : '-'}
         </td>
         <td class="tc hide-mobile"><span class="badge b-success">เสร็จสิ้น</span></td>
         <td><div class="td-actions">
@@ -424,30 +448,6 @@ async function confirmDel(id) {
 }
 
 function filterHistory() { renderHistory(); }
-
-// ฟังก์ชันเปิดดูรายการพัสดุ
-async function viewMaterials(id) {
-  const jobs = await fetchJobs({}); 
-  const job = jobs.find(x => x.id === id);
-  if (!job || !job.job_materials || job.job_materials.length === 0) return;
-  
-  const tbody = document.getElementById('mat-modal-tbody');
-  tbody.innerHTML = job.job_materials.map((m, i) => `
-    <tr>
-      <td class="tc">${i + 1}</td>
-      <td><span style="font-size:12px;color:#64748b">${m.code}</span></td>
-      <td>${m.name}</td>
-      <td class="tc"><strong>${m.qty}</strong> ${m.unit || 'EA'}</td>
-    </tr>
-  `).join('');
-  
-  document.getElementById('mat-modal-overlay').classList.add('open');
-}
-
-// ฟังก์ชันปิดหน้าต่าง
-function closeMatModal() {
-  document.getElementById('mat-modal-overlay').classList.remove('open');
-}
 
 // ── DASHBOARD ─────────────────────────
 async function renderDashboard() {
@@ -546,7 +546,18 @@ function generateBR1HTML(job) {
   const s30 = parseFloat(job.svc_30min||s.service_30min)||285;
   const ms  = job.job_materials||[];
   const mu  = ms.reduce((sum,m)=>sum+parseFloat(m.user_price||0),0);
-  const mh  = mu, sv=s30*2, st2=sv+mh, tx=st2*.07, gd=sw+st2+tx;
+  const mh  = mu;
+  
+  let sv = s30 * 2; 
+  if (job.serviceCost) sv = parseFloat(job.serviceCost);
+  else {
+    const calc = getServiceCalc(job.time_start, job.time_end, s30);
+    sv = calc.sv;
+  }
+
+  const st2 = sv+mh, tx=st2*.07, gd=sw+st2+tx;
+  const extraSv = sv > s30 ? sv - s30 : 0;
+  
   const wH  = (job.work_type||'high')!=='low', wL=job.work_type==='low'||job.work_type==='both';
 
   const rows = ms.map((m,i)=>`<tr>
@@ -605,7 +616,7 @@ function generateBR1HTML(job) {
       <span>- สำหรับ 30 นาทีแรก ${fmt(s30)} บาท</span><span>เป็นเงิน <u>${fmt(s30)}</u> บาท</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding-left:14px;font-size:12px;margin-bottom:4px">
-      <span>- สำหรับครึ่งชั่วโมงต่อไป</span><span>เป็นเงิน <u>${fmt(s30)}</u> บาท</span>
+      <span>- สำหรับครึ่งชั่วโมงต่อไป</span><span>เป็นเงิน <u>${fmt(extraSv)}</u> บาท</span>
     </div>
     <div style="display:flex;justify-content:space-between;border-top:1.5px solid #333;padding-top:4px;font-weight:700">
       <span>รวมเป็นเงิน</span><span><u>${fmt(sw+sv)}</u> บาท</span>
@@ -680,7 +691,15 @@ function generateMT1HTML(job) {
   const s30 = parseFloat(job.svc_30min||s.service_30min)||285;
   const ms  = job.job_materials||[];
   const mu  = ms.reduce((sum,m)=>sum+parseFloat(m.user_price||0),0);
-  const st2 = s30*2+mu, tx=st2*.07, gd=sw+st2+tx;
+  
+  let sv = s30 * 2; 
+  if (job.serviceCost) sv = parseFloat(job.serviceCost);
+  else {
+    const calc = getServiceCalc(job.time_start, job.time_end, s30);
+    sv = calc.sv;
+  }
+
+  const st2 = sv+mu, tx=st2*.07, gd=sw+st2+tx;
   return `<div style="line-height:2;font-size:13.5px;color:#111">
   <div style="display:flex;align-items:flex-start;margin-bottom:16px">
     <div style="display:flex;align-items:center;gap:10px;min-width:175px">
@@ -734,3 +753,42 @@ function generateMT1HTML(job) {
   </div>
 </div>`;
 }
+
+// ── ฟังก์ชันเสริมสำหรับแสดงรายการพัสดุ ──
+window.viewMaterials = async function(id, btn) {
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="ti ti-loader"></i> โหลด...';
+  btn.disabled = true;
+
+  try {
+    const jobs = await fetchJobs({}); 
+    const job = jobs.find(x => x.id === id);
+    
+    if (!job || !job.job_materials || job.job_materials.length === 0) {
+      showToast('ไม่พบรายการพัสดุในใบงานนี้', 'warning');
+      return;
+    }
+    
+    const tbody = document.getElementById('mat-modal-tbody');
+    tbody.innerHTML = job.job_materials.map((m, i) => `
+      <tr>
+        <td class="tc">${i + 1}</td>
+        <td><span style="font-size:12px;color:#64748b">${m.code}</span></td>
+        <td>${m.name}</td>
+        <td class="tc"><strong>${m.qty}</strong> ${m.unit || 'EA'}</td>
+      </tr>
+    `).join('');
+    
+    document.getElementById('mat-modal-overlay').classList.add('open');
+  } catch (err) {
+    console.error(err);
+    showToast('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+};
+
+window.closeMatModal = function() {
+  document.getElementById('mat-modal-overlay').classList.remove('open');
+};
