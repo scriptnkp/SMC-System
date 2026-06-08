@@ -2,21 +2,98 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PEA นครพนม - ระบบจัดการใบบริการ</title>
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>PEA NKP</title>
+  <!-- Font via link (not @import — more reliable across browsers) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Critical display states -->
+  <style>
+    #login-screen.hide { display:none !important; }
+    #app-wrapper { display:none; }
+    #app-wrapper.show { display:flex; width:100%; }
+  </style>
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo-wrap">
+      <div class="login-logo-circle">
+        <img id="login-logo-img" src="" alt="" style="display:none">
+        <span id="login-logo-default" style="font-size:14px;font-weight:700;color:#1a3a6b">กฟภ.</span>
+      </div>
+      <div class="login-org">การไฟฟ้าส่วนภูมิภาค</div>
+      <div class="login-sub">จังหวัดนครพนม · ระบบจัดการใบบริการ</div>
+    </div>
+
+    <!-- Employee ID -->
+    <div class="login-field">
+      <label>รหัสพนักงาน (6-7 หลัก)</label>
+      <input type="text" id="login-empid" class="login-input"
+        inputmode="numeric" pattern="[0-9]*"
+        maxlength="7" placeholder="000000"
+        style="text-align:center;letter-spacing:4px;font-size:22px;font-weight:700"
+        onkeydown="if(event.key==='Enter')document.querySelector('.numpad-btn.ok').click()">
+    </div>
+
+    <!-- PIN -->
+    <div class="login-field" style="margin-bottom:0">
+      <label>PIN 6 หลัก</label>
+      <div class="pin-display">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+    </div>
+
+    <!-- Numpad -->
+    <div class="numpad">
+      <button class="numpad-btn" onclick="numpadPress('1')">1</button>
+      <button class="numpad-btn" onclick="numpadPress('2')">2</button>
+      <button class="numpad-btn" onclick="numpadPress('3')">3</button>
+      <button class="numpad-btn" onclick="numpadPress('4')">4</button>
+      <button class="numpad-btn" onclick="numpadPress('5')">5</button>
+      <button class="numpad-btn" onclick="numpadPress('6')">6</button>
+      <button class="numpad-btn" onclick="numpadPress('7')">7</button>
+      <button class="numpad-btn" onclick="numpadPress('8')">8</button>
+      <button class="numpad-btn" onclick="numpadPress('9')">9</button>
+      <button class="numpad-btn clear" onclick="numpadPress('clear')">ล้าง</button>
+      <button class="numpad-btn" onclick="numpadPress('0')">0</button>
+      <button class="numpad-btn del" onclick="numpadPress('del')">⌫</button>
+    </div>
+
+    <div id="login-err" class="login-err"></div>
+    <button id="login-submit" class="login-btn" onclick="handleLogin()">เข้าสู่ระบบ</button>
+    <div style="text-align:center;margin-top:14px;font-size:11px;color:#c0c9d8">PEA NKP · v2.1 Supabase</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     APP WRAPPER
+════════════════════════════════════════ -->
+<div id="sidebar-overlay"></div>
+<div id="app-wrapper">
+
+<!-- SIDEBAR -->
 <aside id="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-circle">กฟภ.</div>
+    <div class="logo-circle" id="sidebar-logo-default">กฟภ.</div>
+    <img id="sidebar-logo-img" src="" alt="" style="width:42px;height:42px;object-fit:contain;border-radius:6px;display:none;flex-shrink:0">
     <div>
       <div class="org-name">การไฟฟ้าส่วนภูมิภาค</div>
       <div class="org-sub">จังหวัดนครพนม</div>
     </div>
   </div>
+
   <nav>
     <div class="nav-section">เมนูหลัก</div>
     <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
@@ -30,168 +107,127 @@
       <i class="ti ti-history"></i><span>ประวัติการแจ้งซ่อม</span>
     </div>
     <div class="nav-section">ระบบ</div>
+    <div class="nav-item admin-only" data-page="users" onclick="navigateTo('users')" style="display:none">
+      <i class="ti ti-users-group"></i><span>จัดการผู้ใช้งาน</span>
+    </div>
     <div class="nav-item" data-page="settings" onclick="navigateTo('settings')">
       <i class="ti ti-settings"></i><span>ตั้งค่าระบบ</span>
     </div>
   </nav>
-  <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.1)">
-    <div style="font-size:11px;color:rgba(255,255,255,0.35)">v1.0.0 · PEA NKP</div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-avatar-text">?</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">กำลังโหลด...</div>
+        <div class="user-role">
+          <span id="sidebar-user-emp" style="font-size:11px;color:rgba(255,255,255,.4)"></span>
+          · <span id="sidebar-user-role"></span>
+        </div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="handleLogout()">
+      <i class="ti ti-logout"></i> ออกจากระบบ
+    </button>
   </div>
 </aside>
 
+<!-- MAIN -->
 <div id="main">
+  <!-- TOPBAR -->
   <div class="topbar">
-    <div class="topbar-title" id="topbar-title">แดชบอร์ดสรุปงาน</div>
+    <button id="hamburger" class="topbar-hamburger"><i class="ti ti-menu-2"></i></button>
+    <div class="topbar-title" id="topbar-title">แดชบอร์ด</div>
     <div class="topbar-right">
-      <span id="current-date" style="font-size:13px;color:#6b7280"></span>
+      <div class="topbar-chip"><i class="ti ti-user" style="font-size:14px"></i><span id="topbar-user"></span></div>
+      <div class="topbar-chip" id="topbar-date"></div>
     </div>
   </div>
 
+  <!-- ── DASHBOARD ── -->
   <div id="page-dashboard" class="page active">
-    <div class="dashboard-grid">
-      <div class="stat-card blue">
+    <div class="stats-grid">
+      <div class="stat-card c-blue">
         <div class="stat-label">ใบงานทั้งหมด</div>
-        <div class="stat-value" id="dash-total-jobs">0</div>
-        <div class="stat-sub">ตั้งแต่ต้น</div>
+        <div class="stat-val" id="dash-total">-</div>
+        <div class="stat-sub">ตั้งแต่เริ่มต้น</div>
         <i class="ti ti-files stat-icon"></i>
       </div>
-      <div class="stat-card amber">
+      <div class="stat-card c-amber">
         <div class="stat-label">ใบงานเดือนนี้</div>
-        <div class="stat-value" id="dash-month-jobs">0</div>
+        <div class="stat-val" id="dash-month">-</div>
         <div class="stat-sub">ใบ</div>
         <i class="ti ti-calendar-month stat-icon"></i>
       </div>
-      <div class="stat-card green">
+      <div class="stat-card c-green">
         <div class="stat-label">รายได้เดือนนี้</div>
-        <div class="stat-value" style="font-size:20px" id="dash-month-revenue">0</div>
+        <div class="stat-val" style="font-size:20px" id="dash-rev-m">-</div>
         <div class="stat-sub">บาท</div>
         <i class="ti ti-cash stat-icon"></i>
       </div>
-      <div class="stat-card purple">
+      <div class="stat-card c-purple">
         <div class="stat-label">รายได้รวมทั้งหมด</div>
-        <div class="stat-value" style="font-size:20px" id="dash-total-revenue">0</div>
+        <div class="stat-val" style="font-size:20px" id="dash-rev-all">-</div>
         <div class="stat-sub">บาท</div>
         <i class="ti ti-chart-bar stat-icon"></i>
       </div>
     </div>
-
     <div class="two-col">
       <div class="card">
-        <div class="card-title"><i class="ti ti-users"></i>สรุปงานแต่ละช่าง</div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>ชื่อช่าง</th>
-                <th class="text-center">จำนวนงาน</th>
-                <th class="text-right">รายได้รวม (บ.)</th>
-                <th class="text-right">เฉลี่ย/งาน (บ.)</th>
-              </tr>
-            </thead>
-            <tbody id="tech-tbody">
-              <tr><td colspan="5" style="text-align:center;color:#aaa;padding:16px">ยังไม่มีข้อมูล</td></tr>
-            </tbody>
+        <div class="card-title"><i class="ti ti-award"></i>สรุปงานแต่ละช่าง</div>
+        <div class="table-wrap">
+          <table class="dt">
+            <thead><tr><th>#</th><th>ชื่อช่าง</th><th class="tc">งานทั้งหมด</th><th class="tc">เดือนนี้</th><th class="tr">รายได้รวม (บ.)</th><th class="tr">เฉลี่ย/งาน</th></tr></thead>
+            <tbody id="tech-tbody"><tr><td colspan="6" style="text-align:center;color:#aaa;padding:20px">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
       </div>
-
       <div class="card">
-        <div class="card-title"><i class="ti ti-clock"></i>ใบงานล่าสุด</div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>วันที่</th>
-                <th>เลขที่</th>
-                <th>มิเตอร์</th>
-                <th>ช่าง</th>
-                <th class="text-right">ยอด (บ.)</th>
-                <th>สถานะ</th>
-              </tr>
-            </thead>
-            <tbody id="recent-tbody">
-              <tr><td colspan="6" style="text-align:center;color:#aaa;padding:16px">ยังไม่มีข้อมูล</td></tr>
-            </tbody>
+        <div class="card-title"><i class="ti ti-clock-hour-4"></i>ใบงานล่าสุด</div>
+        <div class="table-wrap">
+          <table class="dt">
+            <thead><tr><th>วันที่</th><th>เลขที่</th><th>มิเตอร์</th><th>ช่าง</th><th class="tr">ยอด (บ.)</th><th>สถานะ</th></tr></thead>
+            <tbody id="recent-tbody"><tr><td colspan="6" style="text-align:center;color:#aaa;padding:20px">กำลังโหลด...</td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ── BR1 FORM ── -->
   <div id="page-br1" class="page">
     <form id="br1-form" onsubmit="return false">
 
       <div class="card">
-        <div class="card-title"><i class="ti ti-info-circle"></i>ข้อมูลใบงาน บร.1</div>
+        <div class="card-title"><i class="ti ti-clipboard-list"></i>ข้อมูลใบงาน บร.1</div>
         <div class="form-grid">
-          <div class="form-group">
-            <label>วันที่ออกเอกสาร</label>
-            <input type="date" id="f-date">
-          </div>
-          <div class="form-group">
-            <label>วันที่ให้บริการ</label>
-            <input type="date" id="f-service-date">
-          </div>
-          <div class="form-group">
-            <label>เวลาเริ่ม</label>
-            <input type="text" id="f-time-start" placeholder="12:40">
-          </div>
-          <div class="form-group">
-            <label>เวลาสิ้นสุด</label>
-            <input type="text" id="f-time-end" placeholder="13:40">
-          </div>
-          <div class="form-group">
-            <label>เลขที่ บร.1</label>
-            <input type="text" id="f-br1-no" placeholder="390198">
-          </div>
-          <div class="form-group">
-            <label>เล่มที่</label>
-            <input type="text" id="f-book-no" placeholder="7804">
-          </div>
+          <div class="form-group"><label>วันที่ออกเอกสาร</label><input type="date" id="f-date" class="field"></div>
+          <div class="form-group"><label>วันที่ให้บริการ</label><input type="date" id="f-service-date" class="field"></div>
+          <div class="form-group"><label>เวลาเริ่ม</label><input type="text" id="f-time-start" class="field" placeholder="12:40" inputmode="numeric"></div>
+          <div class="form-group"><label>เวลาสิ้นสุด</label><input type="text" id="f-time-end" class="field" placeholder="13:40" inputmode="numeric"></div>
+          <div class="form-group"><label>เลขที่ บร.1</label><input type="text" id="f-br1-no" class="field" placeholder="390198" inputmode="numeric"></div>
+          <div class="form-group"><label>เล่มที่</label><input type="text" id="f-book-no" class="field" inputmode="numeric"></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title"><i class="ti ti-user"></i>ข้อมูลผู้ใช้ไฟ</div>
+        <div class="card-title"><i class="ti ti-user-circle"></i>ข้อมูลผู้ใช้ไฟ</div>
         <div class="form-grid">
-          <div class="form-group">
-            <label>ชื่อลูกค้า / สถานที่</label>
-            <input type="text" id="f-customer-name" placeholder="ชื่อ-สกุล หรือสถานที่">
-          </div>
-          <div class="form-group">
-            <label>เบอร์โทรศัพท์</label>
-            <input type="tel" id="f-customer-phone" placeholder="080-xxx-xxxx">
-          </div>
-          <div class="form-group">
-            <label>หมายเลขมิเตอร์ PEA *</label>
-            <input type="text" id="f-meter-no" placeholder="6500714420" required>
-          </div>
-          <div class="form-group full">
-            <label>ที่อยู่</label>
-            <input type="text" id="f-address" placeholder="ที่อยู่ผู้ใช้ไฟ">
-          </div>
+          <div class="form-group"><label>ชื่อลูกค้า / สถานที่</label><input type="text" id="f-customer-name" class="field"></div>
+          <div class="form-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="f-customer-phone" class="field" placeholder="080-xxx-xxxx"></div>
+          <div class="form-group"><label>หมายเลขมิเตอร์ PEA *</label><input type="text" id="f-meter-no" class="field" inputmode="numeric" required></div>
+          <div class="form-group full"><label>ที่อยู่</label><input type="text" id="f-address" class="field"></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title"><i class="ti ti-tool"></i>รายการปฏิบัติงาน</div>
+        <div class="card-title"><i class="ti ti-tools"></i>รายการปฏิบัติงาน</div>
         <div class="form-grid">
-          <div class="form-group">
-            <label>ชื่อช่าง / พชง.</label>
-            <input type="text" id="f-technician" placeholder="นายสันติ อินทิสาร">
-          </div>
-          <div class="form-group">
-            <label>ชื่อผู้ประมาณการ</label>
-            <input type="text" id="f-estimator" placeholder="นายสันติ อินทิสาร">
-          </div>
-          <div class="form-group">
-            <label>จำนวนผู้ปฏิบัติงาน (คน)</label>
-            <input type="number" id="f-workers" value="3" min="1">
-          </div>
-          <div class="form-group">
-            <label>ประเภทงาน</label>
-            <select id="f-work-type">
+          <div class="form-group"><label>ชื่อช่าง / พชง.</label><input type="text" id="f-technician" class="field"></div>
+          <div class="form-group"><label>ชื่อผู้ประมาณการ</label><input type="text" id="f-estimator" class="field"></div>
+          <div class="form-group"><label>จำนวนผู้ปฏิบัติงาน (คน)</label><input type="number" id="f-workers" class="field" value="1" min="1" inputmode="numeric"></div>
+          <div class="form-group"><label>ประเภทงาน</label>
+            <select id="f-work-type" class="field">
               <option value="high">ด้านแรงสูง</option>
               <option value="low">ด้านแรงต่ำ</option>
               <option value="both">ทั้งสองด้าน</option>
@@ -201,253 +237,217 @@
       </div>
 
       <div class="card">
-        <div class="card-title"><i class="ti ti-package"></i>รายการพัสดุ (ข้อ ข.)</div>
-
-        <div class="form-group" style="margin-bottom:16px;max-width:500px" id="mat-search-wrap">
-          <label>ค้นหาพัสดุ (พิมพ์รหัสหรือชื่อ)</label>
-          <div class="material-search">
-            <input type="text" id="mat-search" placeholder="เช่น FUSE LINK หรือ 1040030002"
-              oninput="onMatSearch(this.value)" autocomplete="off">
-            <div id="mat-dropdown" class="material-dropdown" style="display:none"></div>
+        <div class="card-title"><i class="ti ti-box"></i>รายการพัสดุ (ข้อ ข.)</div>
+        <div class="form-group" style="margin-bottom:16px;max-width:520px" id="mat-search-wrap">
+          <label>ค้นหาพัสดุ (รหัสหรือชื่อ)</label>
+          <div class="mat-search-wrap">
+            <input type="text" id="mat-search" class="field" placeholder="พิมพ์อย่างน้อย 2 ตัวอักษร..." oninput="onMatSearch(this.value)" autocomplete="off">
+            <div id="mat-dd" class="mat-dropdown" style="display:none"></div>
           </div>
         </div>
-
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th style="width:36px">#</th>
-                <th style="width:115px">รหัสพัสดุ</th>
-                <th>ชื่อพัสดุ</th>
-                <th style="width:50px" class="text-center">หน่วย</th>
-                <th style="width:70px" class="text-center">จำนวน</th>
-                <th style="width:90px" class="text-right">ราคาฐาน (บ.)</th>
-                <th style="width:105px" class="text-right">ราคา+40% (บ.)</th>
-                <th style="width:44px"></th>
-              </tr>
-            </thead>
-            <tbody id="material-tbody">
-              <tr id="no-mat-row">
-                <td colspan="8" style="text-align:center;padding:20px;color:#aaa">
-                  <i class="ti ti-package" style="font-size:24px;display:block;margin-bottom:4px"></i>
-                  ค้นหาและเพิ่มรายการพัสดุด้านบน
-                </td>
-              </tr>
-            </tbody>
+        <div class="table-wrap">
+          <table class="dt">
+            <thead><tr>
+              <th style="width:32px">#</th>
+              <th style="width:110px">รหัส</th>
+              <th>ชื่อพัสดุ</th>
+              <th style="width:48px" class="tc">หน่วย</th>
+              <th style="width:68px" class="tc">จำนวน</th>
+              <th style="width:90px" class="tr">ราคาฐาน</th>
+              <th style="width:100px" class="tr">+40% (บ.)</th>
+              <th style="width:42px"></th>
+            </tr></thead>
+            <tbody id="mat-tbody"></tbody>
           </table>
         </div>
       </div>
 
+      <!-- SUMMARY -->
       <div class="card">
         <div class="card-title"><i class="ti ti-calculator"></i>สรุปค่าใช้จ่าย</div>
-        <div style="max-width:400px;margin-left:auto">
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:13.5px">
-            <span>1.) ค่าปลด-สับอุปกรณ์ตัดตอน (S-3Z-333)</span>
-            <strong id="calc-switch">570.00</strong>
+        <div style="max-width:440px;margin-left:auto">
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg);font-size:14px">
+            <span style="color:var(--muted)">1.) ค่าปลด-สับอุปกรณ์ตัดตอน</span><strong id="c-switch">-</strong>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:13.5px">
-            <span>2.) ค่าตรวจสอบ + แก้ไข + พัสดุ (S-3Z-444)</span>
-            <strong id="calc-service-subtotal">-</strong>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg);font-size:14px">
+            <span style="color:var(--muted)">2.) ค่าตรวจสอบ + แก้ไข + พัสดุ</span><strong id="c-st2">-</strong>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:13px;color:#6b7280">
-            <span style="padding-left:16px">· ค่าบริการ (2 ครึ่งชั่วโมง)</span>
-            <span id="calc-service">570.00</span>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12.5px;color:var(--muted)">
+            <span style="padding-left:14px">· ค่าบริการ (2×30 นาที)</span><span id="c-service">-</span>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:13px;color:#6b7280">
-            <span style="padding-left:16px">· รวมพัสดุ (ราคา+40%)</span>
-            <span id="calc-mat-total">0.00</span>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bg);font-size:12.5px;color:var(--muted)">
+            <span style="padding-left:14px">· พัสดุ+40% + handling 31%</span><span id="c-mat-h">-</span>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:13.5px">
-            <span>รวมเป็นเงิน (ข้อ 1.+2.)</span>
-            <strong id="calc-pretax">-</strong>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg);font-size:14px">
+            <span style="color:var(--muted)">ภาษีมูลค่าเพิ่ม 7%</span><strong id="c-tax">-</strong>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:13.5px">
-            <span>ภาษี 7%</span>
-            <strong id="calc-tax">-</strong>
-          </div>
-          <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:700;color:#1a3a6b;border-top:2px solid #1a3a6b;margin-top:4px">
-            <span>รวมทั้งสิ้น</span>
-            <span id="calc-grand">-</span>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:18px;font-weight:700;color:var(--primary);border-top:2px solid var(--primary);margin-top:4px">
+            <span>รวมทั้งสิ้น</span><span id="c-grand">-</span>
           </div>
         </div>
       </div>
 
-      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:24px">
-        <button type="button" class="btn btn-outline" onclick="saveCurrentJob()">
-          <i class="ti ti-device-floppy"></i> บันทึก
-        </button>
-        <button type="button" class="btn btn-primary" onclick="previewBR1()">
-          <i class="ti ti-file-description"></i> ดูตัวอย่าง บร.1
-        </button>
-        <button type="button" class="btn btn-accent" onclick="previewMT1()">
-          <i class="ti ti-mail"></i> ดูตัวอย่าง มท.1
-        </button>
+      <div class="action-bar">
+        <button type="button" class="btn btn-ghost" onclick="saveCurrentJob()"><i class="ti ti-device-floppy"></i>บันทึก</button>
+        <button type="button" class="btn btn-primary" onclick="previewBR1()"><i class="ti ti-file-description"></i>ดูตัวอย่าง บร.1</button>
+        <button type="button" class="btn btn-accent" onclick="previewMT1()"><i class="ti ti-mail-forward"></i>ดูตัวอย่าง มท.1</button>
       </div>
     </form>
   </div>
 
+  <!-- ── HISTORY ── -->
   <div id="page-history" class="page">
     <div class="card">
-      <div class="card-title"><i class="ti ti-history"></i>ประวัติการแจ้งซ่อมทั้งหมด</div>
-      <div class="history-filters">
-        <div class="form-group">
+      <div class="card-title"><i class="ti ti-history"></i>ประวัติการแจ้งซ่อม</div>
+      <div class="filters-bar">
+        <div class="form-group" style="flex:2;min-width:180px">
           <label>ค้นหา</label>
-          <input type="text" id="h-search" placeholder="มิเตอร์ / ชื่อลูกค้า / เลขที่ใบงาน" oninput="filterHistory()" style="width:260px">
+          <input type="text" id="h-search" class="field" placeholder="มิเตอร์ / ชื่อลูกค้า / เลขที่" oninput="filterHistory()">
         </div>
-        <div class="form-group">
-          <label>กรองตามช่าง</label>
-          <input type="text" id="h-tech" placeholder="ชื่อช่าง" oninput="filterHistory()" style="width:180px">
+        <div class="form-group" style="min-width:140px">
+          <label>ช่าง</label>
+          <input type="text" id="h-tech" class="field" placeholder="ชื่อช่าง" oninput="filterHistory()">
         </div>
-        <button class="btn btn-primary btn-sm" onclick="newBR1()">
-          <i class="ti ti-plus"></i> สร้างใบงานใหม่
-        </button>
+        <div class="form-group" style="min-width:135px">
+          <label>ตั้งแต่</label>
+          <input type="date" id="h-date-from" class="field" onchange="filterHistory()">
+        </div>
+        <div class="form-group" style="min-width:135px">
+          <label>ถึงวันที่</label>
+          <input type="date" id="h-date-to" class="field" onchange="filterHistory()">
+        </div>
+        <div class="form-group" style="justify-content:flex-end">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" onclick="newBR1()"><i class="ti ti-plus"></i>สร้างใหม่</button>
+        </div>
       </div>
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>วันที่</th>
-              <th>เลขที่ บร.1</th>
-              <th>หมายเลขมิเตอร์</th>
-              <th>ชื่อลูกค้า</th>
-              <th>ช่าง</th>
-              <th class="text-right">ยอดรวม (บาท)</th>
-              <th class="text-center">พัสดุ</th>
-              <th class="text-center">สถานะ</th>
-              <th class="text-center">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="history-tbody">
-            <tr><td colspan="9" style="text-align:center;padding:24px;color:#aaa">ยังไม่มีข้อมูล</td></tr>
-          </tbody>
+      <div class="table-wrap">
+        <table class="dt">
+          <thead><tr>
+            <th>วันที่</th><th>เลขที่ บร.1</th><th class="hide-mobile">มิเตอร์</th><th class="hide-mobile">ชื่อลูกค้า</th>
+            <th>ช่าง</th><th class="tr">ยอดรวม (บาท)</th>
+            <th class="tc hide-mobile">พัสดุ</th><th class="tc hide-mobile">สถานะ</th><th class="tc">จัดการ</th>
+          </tr></thead>
+          <tbody id="history-tbody"><tr><td colspan="9" style="text-align:center;padding:28px;color:#aaa">กำลังโหลด...</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <div id="page-settings" class="page">
+  <!-- ── USERS (Admin) ── -->
+  <div id="page-users" class="page admin-only" style="display:none">
     <div class="card">
-      <div class="card-title"><i class="ti ti-building"></i>ข้อมูลหน่วยงาน</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>ชื่อหน่วยงาน (กฟฟ.)</label>
-          <input type="text" id="s-office">
-        </div>
-        <div class="form-group">
-          <label>ผู้จัดการ</label>
-          <input type="text" id="s-manager">
-        </div>
-        <div class="form-group full">
-          <label>ที่อยู่</label>
-          <input type="text" id="s-address">
-        </div>
-        <div class="form-group">
-          <label>เบอร์โทรศัพท์</label>
-          <input type="text" id="s-phone">
-        </div>
-        <div class="form-group">
-          <label>รหัสเอกสาร (ที่ มท)</label>
-          <input type="text" id="s-doc-prefix">
-        </div>
-        <div class="form-group">
-          <label>แผนก</label>
-          <input type="text" id="s-dept">
-        </div>
-        <div class="form-group">
-          <label>เล่มที่เริ่มต้น</label>
-          <input type="text" id="s-book-no">
-        </div>
+      <div class="card-title"><i class="ti ti-users-group"></i>จัดการผู้ใช้งาน</div>
+      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--r-sm);padding:12px 16px;margin-bottom:16px;font-size:13.5px">
+        <i class="ti ti-info-circle" style="color:#d97706"></i>
+        <strong>เพิ่มผู้ใช้ใหม่:</strong> ไปที่ Supabase Dashboard → Authentication → Add User
+        ใส่ Email: <code>รหัสพนักงาน@pea.internal</code> เช่น <code>123456@pea.internal</code>
+        Password = PIN ที่ต้องการ
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><i class="ti ti-coin"></i>ค่าบริการมาตรฐาน</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>ค่าปลด-สับอุปกรณ์ตัดตอน (บาท)</label>
-          <input type="number" id="s-switch-cost" step="0.01">
-        </div>
-        <div class="form-group">
-          <label>ค่าบริการต่อ 30 นาที (บาท)</label>
-          <input type="number" id="s-service-30min" step="0.01">
-        </div>
+      <div class="table-wrap">
+        <table class="dt">
+          <thead><tr><th>รหัสพนักงาน</th><th>ชื่อ-สกุล</th><th class="tc">สิทธิ์</th><th class="tc">สถานะ</th><th class="tc"></th></tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="5" style="text-align:center;color:#aaa;padding:20px">กำลังโหลด...</td></tr></tbody>
+        </table>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><i class="ti ti-photo"></i>โลโก้หน่วยงาน (สำหรับหัวเอกสาร)</div>
-      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-        <input type="file" id="logo-upload" accept="image/*" onchange="uploadLogoToGAS(this)" style="font-size:13px">
-        <span id="logo-status" style="font-size:13px;color:#2980b9;font-weight:500;"></span>
-      </div>
-      <div style="margin-top:16px;">
-        <img id="logo-preview-img" src="" style="max-height:80px; display:none; border: 1px solid #ccc; border-radius: 6px; padding: 4px;" alt="Logo Preview">
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><i class="ti ti-file-upload"></i>อัพเดทราคามาตรฐาน (CSV)</div>
-      <p style="font-size:13.5px;color:#6b7280;margin-bottom:12px">
-        อัพโหลดไฟล์ <code>materials.csv</code> ใหม่เพื่อใช้ราคาล่าสุด ไฟล์ต้องมีรูปแบบเดียวกับ <code>ราคามาตราฐาน.csv</code>
-        (คอลัมน์ E = ราคามาตรฐาน, คอลัมน์ K = Std_อีสาน)
-      </p>
-      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-        <input type="file" id="csv-upload" accept=".csv" onchange="importCSV(this)" style="font-size:13px">
-        <span id="csv-status" style="font-size:13px;color:#27ae60"></span>
-      </div>
-      <p style="font-size:12px;color:#aaa;margin-top:8px">
-        💡 สำหรับ deploy บน GitHub Pages: แทนที่ไฟล์ <code>data/materials.csv</code> โดยตรง
-      </p>
-    </div>
-
-    <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:24px">
-      <button class="btn btn-primary" onclick="saveSettingsForm()">
-        <i class="ti ti-device-floppy"></i> บันทึกการตั้งค่า
-      </button>
     </div>
   </div>
-</div><div id="pdf-preview-overlay">
-  <div class="preview-bar">
-    <button class="btn btn-outline" onclick="switchPreviewDoc('br1')" style="background:#fff">
-      <i class="ti ti-file-description"></i> บร.1
-    </button>
-    <button class="btn btn-outline" onclick="switchPreviewDoc('mt1')" style="background:#fff">
-      <i class="ti ti-mail"></i> มท.1
-    </button>
-    <button class="btn btn-success" onclick="printDoc()">
-      <i class="ti ti-printer"></i> พิมพ์
-    </button>
-    <button class="btn btn-danger" onclick="closePdfPreview()">
-      <i class="ti ti-x"></i> ปิด
-    </button>
+
+  <!-- ── SETTINGS ── -->
+  <div id="page-settings" class="page">
+    <!-- Logo -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-photo"></i>โลโก้หน่วยงาน</div>
+      <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+        <div style="text-align:center">
+          <div style="width:110px;height:110px;border:2px dashed var(--border);border-radius:var(--r);display:flex;align-items:center;justify-content:center;background:var(--bg);overflow:hidden;margin-bottom:6px">
+            <img id="logo-preview-img" src="" alt="" style="max-width:100%;max-height:100%;object-fit:contain;display:none">
+            <div id="logo-placeholder" style="text-align:center;color:#aaa"><i class="ti ti-photo" style="font-size:28px;display:block;margin-bottom:3px"></i><span style="font-size:11px">ยังไม่มีโลโก้</span></div>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">ตัวอย่าง</div>
+        </div>
+        <div style="flex:1;min-width:220px">
+          <p style="font-size:13.5px;color:var(--muted);margin-bottom:12px">
+            แสดงใน <strong>หัวเอกสาร บร.1 / มท.1</strong> และ <strong>แถบด้านข้าง</strong><br>
+            รองรับ PNG / JPG / SVG (สูงสุด 2MB)
+          </p>
+          <label for="logo-file" class="logo-upload-zone">
+            <i class="ti ti-upload" style="font-size:22px;color:var(--primary);flex-shrink:0"></i>
+            <div>
+              <div style="font-size:13.5px;font-weight:600;color:var(--primary)">คลิกเพื่อเลือกไฟล์</div>
+              <div style="font-size:12px;color:var(--muted)">PNG / JPG / SVG / GIF</div>
+            </div>
+            <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
+          </label>
+          <div id="logo-status" style="margin-top:6px;font-size:13px;color:var(--success)"></div>
+          <button class="btn btn-ghost btn-sm" onclick="removeLogo()" style="margin-top:10px"><i class="ti ti-trash"></i>ลบโลโก้</button>
+        </div>
+      </div>
+    </div>
+    <!-- Org info -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-building"></i>ข้อมูลหน่วยงาน <span class="admin-only badge b-admin" style="display:none">Admin เท่านั้น</span></div>
+      <div class="form-grid">
+        <div class="form-group"><label>ชื่อหน่วยงาน (กฟฟ.)</label><input type="text" id="s-office" class="field"></div>
+        <div class="form-group"><label>ผู้จัดการ</label><input type="text" id="s-manager" class="field"></div>
+        <div class="form-group full"><label>ที่อยู่</label><input type="text" id="s-address" class="field"></div>
+        <div class="form-group"><label>เบอร์โทรศัพท์</label><input type="text" id="s-phone" class="field"></div>
+        <div class="form-group"><label>รหัสเอกสาร (ที่ มท)</label><input type="text" id="s-doc-prefix" class="field"></div>
+        <div class="form-group"><label>แผนก</label><input type="text" id="s-dept" class="field"></div>
+        <div class="form-group"><label>เล่มที่เริ่มต้น</label><input type="text" id="s-book-no" class="field" inputmode="numeric"></div>
+      </div>
+    </div>
+    <!-- Service cost -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-coin"></i>ค่าบริการมาตรฐาน <span class="admin-only badge b-admin" style="display:none">Admin เท่านั้น</span></div>
+      <div class="form-grid-2">
+        <div class="form-group"><label>ค่าปลด-สับอุปกรณ์ตัดตอน (บาท)</label><input type="number" id="s-switch-cost" class="field" step="0.01" inputmode="decimal"></div>
+        <div class="form-group"><label>ค่าบริการต่อ 30 นาที (บาท)</label><input type="number" id="s-service-30min" class="field" step="0.01" inputmode="decimal"></div>
+      </div>
+    </div>
+    <!-- CSV -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-table-import"></i>อัพเดทราคามาตรฐาน (CSV)</div>
+      <p style="font-size:13.5px;color:var(--muted);margin-bottom:12px">
+        อัพโหลดไฟล์ใหม่เพื่ออัพเดทราคาพัสดุในระหว่าง session นี้<br>
+        สำหรับถาวร: แทนที่ไฟล์ <code>data/materials.csv</code> ใน GitHub
+      </p>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <input type="file" id="csv-upload" accept=".csv" onchange="importCSVFile(this)" style="font-size:13px">
+        <span id="csv-status" style="font-size:13px;color:var(--success)"></span>
+      </div>
+    </div>
+    <div class="admin-only action-bar" style="display:none">
+      <button class="btn btn-primary" onclick="saveSettingsForm()"><i class="ti ti-device-floppy"></i>บันทึกการตั้งค่า</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app-wrapper -->
+
+<!-- PDF OVERLAY -->
+<div id="pdf-overlay">
+  <div class="pdf-bar">
+    <button class="btn btn-ghost btn-sm" onclick="switchDoc('br1')" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)"><i class="ti ti-file-description"></i>บร.1</button>
+    <button class="btn btn-ghost btn-sm" onclick="switchDoc('mt1')" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)"><i class="ti ti-mail-forward"></i>มท.1</button>
+    <button class="btn btn-success btn-sm" onclick="printDoc()"><i class="ti ti-printer"></i>พิมพ์</button>
+    <button class="btn btn-danger btn-sm" onclick="closePdfOverlay()"><i class="ti ti-x"></i>ปิด</button>
   </div>
   <div id="pdf-frame"></div>
 </div>
 
 <div id="toast-container"></div>
 
-<script src="js/materials.js?v=4"></script>
-<script src="js/storage.js?v=4"></script>
-<script src="js/app.js?v=4"></script>
+<script src="js/materials.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/app.js"></script>
 <script>
-  const d = new Date();
-  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  document.getElementById('current-date').textContent =
-    `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
-
-  function importCSV(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const text = e.target.result;
-      MATERIALS = parseCSV(text);
-      document.getElementById('csv-status').textContent =
-        `✓ โหลดสำเร็จ ${MATERIALS.length} รายการ`;
-      showToast(`อัพเดทราคามาตรฐาน ${MATERIALS.length} รายการแล้ว`, 'success');
-    };
-    reader.readAsText(file, 'UTF-8');
-  }
+  // Topbar date
+  (function(){
+    const d=new Date(), m=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    document.getElementById('topbar-date').textContent=`${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()+543}`;
+  })();
 </script>
 </body>
 </html>
