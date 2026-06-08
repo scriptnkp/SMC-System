@@ -1,6 +1,6 @@
 // ===== Supabase Client v2.1 =====
 // แก้ 2 บรรทัดนี้ด้วยค่าจาก Supabase → Settings → API
-const SUPABASE_URL  = 'https://cpupxryvaetoehpovvas.supabase.co';
+const SUPABASE_URL  = 'https://cpupxryvaetoehpovvas.supabase.co/rest/v1';
 const SUPABASE_ANON = 'cpupxryvaetoehpovvas';
 
 const { createClient } = supabase;
