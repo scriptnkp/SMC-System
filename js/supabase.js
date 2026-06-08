@@ -1,7 +1,7 @@
 // ===== Supabase Client v2.1 =====
 // แก้ 2 บรรทัดนี้ด้วยค่าจาก Supabase → Settings → API
-const SUPABASE_URL  = 'https://cpupxryvaetoehpovvas.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwdXB4cnl2YWV0b2VocG92dmFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NzQ5MTUsImV4cCI6MjA5NjQ1MDkxNX0.fgDJlGH_Um33wfLQ7EvgKoAF-mAre_KF-Lim-7LdHKU';
+const SUPABASE_URL  = 'https://sbvynwtofgguexidkdos.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNidnlud3RvZmdndWV4aWRrZG9zIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDg4MTI5MiwiZXhwIjoyMDk2NDU3MjkyfQ.WFfrtsqrArOVB2dtyXOp4ZCKDafRhl-Z82gBiUULakw';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON);
