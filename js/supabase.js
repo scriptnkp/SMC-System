@@ -1,7 +1,7 @@
 // ===== Supabase Client v2.1 =====
 // แก้ 2 บรรทัดนี้ด้วยค่าจาก Supabase → Settings → API
-const SUPABASE_URL  = 'https://ykqzmpygyscilxuddhrg.supabase.co';
-const SUPABASE_ANON = 'ykqzmpygyscilxuddhrg';
+const SUPABASE_URL  = 'https://cpupxryvaetoehpovvas.supabase.co';
+const SUPABASE_ANON = 'cpupxryvaetoehpovvas';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -36,10 +36,10 @@ async function fetchProfile() {
   currentProfile = data;
 }
 
-// Login: employee_id → email ภายใน (empId@pea.internal)
-async function loginWithEmployeeId(empId, password) {
+// Login: รหัสพนักงาน = ทั้ง username และ password
+async function loginWithEmployeeId(empId) {
   const email = `${empId.trim()}@pea.internal`;
-  const { error } = await db.auth.signInWithPassword({ email, password });
+  const { error } = await db.auth.signInWithPassword({ email, password: empId.trim() });
   if (error) throw error;
 }
 

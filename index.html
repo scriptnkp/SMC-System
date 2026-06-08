@@ -42,33 +42,8 @@
       <input type="text" id="login-empid" class="login-input"
         inputmode="numeric" pattern="[0-9]*"
         maxlength="7" placeholder="000000"
-        style="text-align:center;letter-spacing:4px;font-size:22px;font-weight:700"
-        onkeydown="if(event.key==='Enter')document.querySelector('.numpad-btn.ok').click()">
-    </div>
-
-    <!-- PIN -->
-    <div class="login-field" style="margin-bottom:0">
-      <label>PIN 6 หลัก</label>
-      <div class="pin-display">
-        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
-        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
-      </div>
-    </div>
-
-    <!-- Numpad -->
-    <div class="numpad">
-      <button class="numpad-btn" onclick="numpadPress('1')">1</button>
-      <button class="numpad-btn" onclick="numpadPress('2')">2</button>
-      <button class="numpad-btn" onclick="numpadPress('3')">3</button>
-      <button class="numpad-btn" onclick="numpadPress('4')">4</button>
-      <button class="numpad-btn" onclick="numpadPress('5')">5</button>
-      <button class="numpad-btn" onclick="numpadPress('6')">6</button>
-      <button class="numpad-btn" onclick="numpadPress('7')">7</button>
-      <button class="numpad-btn" onclick="numpadPress('8')">8</button>
-      <button class="numpad-btn" onclick="numpadPress('9')">9</button>
-      <button class="numpad-btn clear" onclick="numpadPress('clear')">ล้าง</button>
-      <button class="numpad-btn" onclick="numpadPress('0')">0</button>
-      <button class="numpad-btn del" onclick="numpadPress('del')">⌫</button>
+        style="text-align:center;letter-spacing:6px;font-size:28px;font-weight:700"
+        onkeydown="if(event.key==='Enter')handleLogin()">
     </div>
 
     <div id="login-err" class="login-err"></div>

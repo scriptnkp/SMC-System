@@ -67,41 +67,21 @@ function showApp() {
   navigateTo('dashboard');
 }
 
-// ── LOGIN (PIN-based) ─────────────────
-let _pin = '';
-const PIN_LEN = 6;
-
-function resetPin() { _pin = ''; renderPin(); }
-
-function renderPin() {
-  document.querySelectorAll('.pin-dot').forEach((d, i) => {
-    d.classList.toggle('filled', i < _pin.length);
-  });
-}
-
-function numpadPress(val) {
-  if (val === 'del') { _pin = _pin.slice(0,-1); renderPin(); return; }
-  if (val === 'clear') { resetPin(); return; }
-  if (val === 'ok') { handleLogin(); return; }
-  if (_pin.length >= PIN_LEN) return;
-  _pin += val;
-  renderPin();
-  if (_pin.length === PIN_LEN) setTimeout(handleLogin, 180);
-}
+// ── LOGIN ─────────────────────────────
+function resetPin() {} // kept for compatibility
 
 async function handleLogin() {
   const empId = getVal('login-empid').trim();
   const err   = document.getElementById('login-err');
-  if (!empId)       { err.textContent = 'กรุณากรอกรหัสพนักงาน'; return; }
+  if (!empId)           { err.textContent = 'กรุณากรอกรหัสพนักงาน'; return; }
   if (empId.length < 6) { err.textContent = 'รหัสพนักงาน 6-7 หลัก'; return; }
-  if (_pin.length < PIN_LEN) { err.textContent = `กรุณากด PIN ให้ครบ ${PIN_LEN} หลัก`; return; }
 
   const btn = document.getElementById('login-submit');
   btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
   err.textContent = '';
 
   try {
-    await loginWithEmployeeId(empId, _pin);
+    await loginWithEmployeeId(empId);
   } catch(e) {
     err.textContent = 'รหัสพนักงานหรือ PIN ไม่ถูกต้อง';
     btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
