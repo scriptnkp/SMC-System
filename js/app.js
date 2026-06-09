@@ -572,11 +572,10 @@ function generateBR1HTML(job) {
   
   const wH  = (job.work_type||'high')!=='low', wL=job.work_type==='low'||job.work_type==='both';
 
-  // สั่งบังคับให้คอลัมน์ "ชื่อพัสดุ" ตัดคำลงบรรทัดใหม่
   const rows = ms.map((m,i)=>`<tr>
     <td style="text-align:center">${i+1}</td>
     <td style="text-align:center">${m.code}</td>
-    <td style="text-align:left; white-space:normal; word-wrap:break-word; word-break:break-word;">${m.name}</td>
+    <td style="text-align:left; word-wrap:break-word; word-break:break-word;">${m.name}</td>
     <td style="text-align:center">${m.qty}</td>
     <td style="text-align:right">${fmt(m.base_price)}</td>
     <td style="text-align:right"><strong>${fmt(m.user_price)}</strong></td>
@@ -584,26 +583,41 @@ function generateBR1HTML(job) {
   </tr>`).join('');
 
   return `<div style="font-size:13px;color:#111;line-height:1.7">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-    <div>${docLogoTag(52)}</div>
-    <div style="text-align:center;flex:1;font-size:17px;font-weight:700;color:#1a3a6b;padding:0 10px">การไฟฟ้าส่วนภูมิภาค<br>จังหวัดนครพนม</div>
-    <div style="text-align:right;font-size:12px;line-height:2;min-width:200px">
-      <div><b>เลขที่ใบสั่งซ่อม :</b> ${job.br1_no||'-'}</div>
-      <div>กฟฟ. : ${s.office||''}</div>
-      <div>ผู้ประมาณการ : ${job.estimator||'-'}</div>
-      <div>วันที่ : ${thaiDate(job.date)}</div>
-    </div>
-  </div>
+  
+  <table style="width:100%; border:none; margin-bottom:6px;">
+    <tr>
+      <td style="width:60px; border:none; padding:0; vertical-align:top;">${docLogoTag(52)}</td>
+      <td style="border:none; padding:0 10px; text-align:center; vertical-align:top; font-size:17px; font-weight:700; color:#1a3a6b;">
+        การไฟฟ้าส่วนภูมิภาค<br>จังหวัดนครพนม
+      </td>
+      <td style="width:200px; border:none; padding:0; text-align:right; vertical-align:top; font-size:12px; line-height:1.8;">
+        <div><b>เลขที่ใบสั่งซ่อม :</b> ${job.br1_no||'-'}</div>
+        <div>กฟฟ. : ${s.office||''}</div>
+        <div>ผู้ประมาณการ : ${job.estimator||'-'}</div>
+        <div>วันที่ : ${thaiDate(job.date)}</div>
+      </td>
+    </tr>
+  </table>
+
   <div style="text-align:center;font-size:14px;font-weight:700;border:2px solid #111;padding:5px 12px;margin:8px 0">ใบประมาณการค่าใช้จ่ายบริการแก้ไขไฟฟ้าขัดข้อง (บร.1)</div>
   <b>ผู้รับบริการ</b>
-  <div style="font-size:12.5px; padding:4px 0; border-bottom:1px dotted #ccc; line-height:1.6;">
-    <span style="color:#555;">1.) ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ :</span>
-    <span style="border-bottom:1px solid #666; padding:0 4px; word-wrap:break-word;">${job.customer_name||''} ${job.address||''}</span>
-    <span style="white-space:nowrap; margin-left:8px;">โทร <span style="border-bottom:1px solid #666; display:inline-block; min-width:110px; text-align:center;">${job.customer_phone||''}</span></span>
-  </div>
-  <div style="font-size:12.5px; padding:4px 0; border-bottom:1px dotted #ccc; line-height:1.6;">
-    <span style="color:#555;">2.) หมายเลขมิเตอร์ PEA. / NO :</span>
-    <span style="border-bottom:1px solid #666; padding:0 4px; word-wrap:break-word;">${job.meter_no||''}</span>
+  
+  <table style="width:100%; border:none; font-size:12.5px; border-bottom:1px dotted #ccc; margin-bottom:2px;">
+    <tr>
+      <td style="width:195px; border:none; padding:2px 0; color:#555; vertical-align:bottom;">1.) ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ :</td>
+      <td style="border:none; padding:2px 4px; vertical-align:bottom;">
+        <div style="border-bottom:1px solid #666; line-height:1.4; word-break:break-word;">${job.customer_name||''} ${job.address||''}</div>
+      </td>
+      <td style="width:30px; border:none; padding:2px 0 2px 8px; vertical-align:bottom; white-space:nowrap;">โทร</td>
+      <td style="width:110px; border:none; padding:2px 4px; vertical-align:bottom;">
+        <div style="border-bottom:1px solid #666; text-align:center;">${job.customer_phone||''}</div>
+      </td>
+    </tr>
+  </table>
+
+  <div style="font-size:12.5px;display:flex;gap:8px;padding:2px 0;border-bottom:1px dotted #ccc">
+    <span style="color:#555;min-width:195px">2.) หมายเลขมิเตอร์ PEA. / NO :</span>
+    <span style="border-bottom:1px solid #666;flex:1;padding:0 4px">${job.meter_no||''}</span>
   </div>
   <div style="font-size:12px;display:flex;gap:5px;flex-wrap:wrap;padding:2px 0;border-bottom:1px dotted #ccc">
     <span>- ใบ บร.1 / เล่มที่</span><span style="border-bottom:1px solid #666;min-width:48px;padding:0 4px">${job.book_no||s.book_no||''}</span>
@@ -642,6 +656,7 @@ function generateBR1HTML(job) {
   <b>รายการพัสดุ</b>
   <div style="font-size:12.5px;font-weight:600;margin:4px 0 2px">ข้อ ข. อุปกรณ์ที่ กฟภ. นำมาใช้ในการแก้ไขกระแสไฟฟ้าขัดข้อง</div>
   <div style="font-size:11.5px;color:#555;margin-bottom:5px">( 1.) ราคาผู้ใช้ไฟ (บวก 40%)</div>
+  
   <table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0;table-layout:fixed;">
     <thead><tr>
       <th style="background:#e0e0e0;border:1px solid #888;padding:5px;width:26px">ที่</th>
@@ -659,6 +674,7 @@ function generateBR1HTML(job) {
         <td style="border:1px solid #888"></td></tr>
     </tbody>
   </table>
+
   <div style="border:1px solid #888;padding:8px 12px;margin:8px 0;border-radius:2px">
     <div style="font-size:12px;font-weight:700;margin-bottom:4px">หมายเหตุ :</div>
     ${[['1.) ค่าปลด-สับอุปกรณ์ตัดตอน','S-3Z-333',fmt(sw),'(SAP)'],
@@ -733,10 +749,14 @@ function generateMT1HTML(job) {
   <div>ที่ ${s.doc_prefix||'มท 5306.46/นพ.-'}</div>
   <div style="text-align:center;margin:14px 0 12px">${thaiDate(job.date)}</div>
   <div style="display:flex;gap:14px;margin-bottom:4px"><span style="min-width:48px;font-weight:500">เรื่อง</span><span>แจ้งค่าบริการแก้กระแสไฟฟ้าขัดข้อง</span></div>
-  <div style="margin-bottom:18px; line-height:1.6;">
-    <span style="font-weight:500; margin-right:14px;">เรียน</span>
-    <span style="border-bottom:1px solid #555; padding:0 4px; word-wrap:break-word;">${job.customer_name||''} ${job.address||''}</span>
-  </div>
+  
+  <table style="width:100%; border:none; margin-bottom:18px;">
+    <tr>
+      <td style="width:62px; font-weight:500; vertical-align:bottom; padding:0; border:none;">เรียน</td>
+      <td style="border:none; border-bottom:1px solid #555; padding:0 4px; vertical-align:bottom; word-break:break-word; line-height:1.4;">${job.customer_name||''} ${job.address||''}</td>
+    </tr>
+  </table>
+
   <div style="text-indent:48px">
     ด้วยในวันที่ <strong>${thaiDate(job.service_date||job.date)}</strong> เวลา <strong>${job.time_start||'...'} น.</strong>
     ถึงเวลา <strong>${job.time_end||'...'} น.</strong>
