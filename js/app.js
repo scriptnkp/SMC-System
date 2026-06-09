@@ -598,7 +598,7 @@ function generateBR1HTML(job) {
   <b>ผู้รับบริการ</b>
   <div style="font-size:12.5px;display:flex;gap:8px;padding:2px 0;border-bottom:1px dotted #ccc; align-items:flex-end;">
     <span style="min-width:195px;color:#555">1.) ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ :</span>
-    <span style="border-bottom:1px solid #666;flex:1;padding:0 4px; white-space:normal; word-wrap:break-word; word-break:break-word; line-height:1.3;">${job.customer_name||''}</span>
+    <span style="border-bottom:1px solid #666;flex:1;padding:0 4px; white-space:normal; word-wrap:break-word; word-break:break-all; line-break:anywhere; line-height:1.3; min-width:0;">${job.customer_name||''} ${job.address||''}</span>
     <span style="white-space:nowrap;">โทร</span>
     <span style="border-bottom:1px solid #666;min-width:110px;padding:0 4px;white-space:nowrap;">${job.customer_phone||''}</span>
   </div>
@@ -654,7 +654,7 @@ function generateBR1HTML(job) {
       <th style="background:#e0e0e0;border:1px solid #888;padding:5px;width:56px">หมายเหตุ</th>
     </tr></thead>
     <tbody>
-      ${rows||'<tr><td colspan=\"7\" style=\"border:1px solid #888;text-align:center;color:#aaa;padding:6px\">ไม่มีรายการพัสดุ</td></tr>'}
+      ${rows||'<tr><td colspan="7" style="border:1px solid #888;text-align:center;color:#aaa;padding:6px">ไม่มีรายการพัสดุ</td></tr>'}
       <tr><td colspan="5" style="border:1px solid #888;text-align:right;padding:4px 6px;font-weight:700">รวม</td>
         <td style="border:1px solid #888;text-align:right;padding:4px 6px;font-weight:700">${fmt(mu)}</td>
         <td style="border:1px solid #888"></td></tr>
@@ -735,7 +735,7 @@ function generateMT1HTML(job) {
   <div style="text-align:center;margin:14px 0 12px">${thaiDate(job.date)}</div>
   <div style="display:flex;gap:14px;margin-bottom:4px"><span style="min-width:48px;font-weight:500">เรื่อง</span><span>แจ้งค่าบริการแก้กระแสไฟฟ้าขัดข้อง</span></div>
   <div style="display:flex;gap:14px;margin-bottom:18px;align-items:flex-end;"><span style="min-width:48px;font-weight:500">เรียน</span>
-    <span style="border-bottom:1px solid #555;flex:1;padding:0 4px; white-space:normal; word-wrap:break-word; word-break:break-word; line-height:1.3;">${job.customer_name||''}</span>
+    <span style="border-bottom:1px solid #555;flex:1;padding:0 4px; white-space:normal; word-wrap:break-word; word-break:break-all; line-break:anywhere; line-height:1.3; min-width:0;">${job.customer_name||''} ${job.address||''}</span>
   </div>
   <div style="text-indent:48px">
     ด้วยในวันที่ <strong>${thaiDate(job.service_date||job.date)}</strong> เวลา <strong>${job.time_start||'...'} น.</strong>
@@ -771,6 +771,66 @@ function generateMT1HTML(job) {
   </div>
 </div>`;
 }
+
+// ── ฟังก์ชันเสริมสำหรับแสดงรายการพัสดุ ──
+window.viewMaterials = async function(id, btn) {
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="ti ti-loader"></i> โหลด...';
+  btn.disabled = true;
+
+  try {
+    const jobs = await fetchJobs({}); 
+    const job = jobs.find(x => x.id === id);
+    
+    if (!job || !job.job_materials || job.job_materials.length === 0) {
+      showToast('ไม่พบรายการพัสดุในใบงานนี้', 'warning');
+      return;
+    }
+    
+    const tbody = document.getElementById('mat-modal-tbody');
+    tbody.innerHTML = job.job_materials.map((m, i) => `
+      <tr>
+        <td class="tc">${i + 1}</td>
+        <td><span style="font-size:12px;color:#64748b">${m.code}</span></td>
+        <td>${m.name}</td>
+        <td class="tc"><strong>${m.qty}</strong> ${m.unit || 'EA'}</td>
+      </tr>
+    `).join('');
+    
+    document.getElementById('mat-modal-overlay').classList.add('open');
+  } catch (err) {
+    console.error(err);
+    showToast('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+};
+
+window.closeMatModal = function() {
+  document.getElementById('mat-modal-overlay').classList.remove('open');
+};
+
+// ── ฟังก์ชันเปลี่ยนสถานะการจ่ายเงิน (Admin เท่านั้น) ──
+window.togglePaymentStatus = async function(id, currentStatus, btn) {
+  if (!isAdmin()) return;
+  const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
+  
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="ti ti-loader"></i>...';
+  btn.disabled = true;
+
+  try {
+    await updateJobStatus(id, newStatus);
+    showToast(newStatus === 'paid' ? 'อัพเดทสถานะ: จ่ายแล้ว' : 'อัพเดทสถานะ: ยังไม่จ่าย', 'success');
+    renderHistory();
+  } catch(err) {
+    console.error(err);
+    showToast('เกิดข้อผิดพลาดในการอัพเดทสถานะ', 'error');
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+};
 
 // ── ฟังก์ชันเสริมสำหรับแสดงรายการพัสดุ ──
 window.viewMaterials = async function(id, btn) {
