@@ -586,7 +586,7 @@ function generateBR1HTML(job) {
   return `<div style="font-size:13px;color:#111;line-height:1.7">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
     <div>${docLogoTag(52)}</div>
-    <div style="text-align:center;flex:1;font-size:17px;font-weight:700;color:#1a3a6b;padding:0 10px">การไฟฟ้าส่วนภูมิภาค จังหวัดนครพนม</div>
+    <div style="text-align:center;flex:1;font-size:17px;font-weight:700;color:#1a3a6b;padding:0 10px">การไฟฟ้าส่วนภูมิภาค<br>จังหวัดนครพนม</div>
     <div style="text-align:right;font-size:12px;line-height:2;min-width:200px">
       <div><b>เลขที่ใบสั่งซ่อม :</b> ${job.br1_no||'-'}</div>
       <div>กฟฟ. : ${s.office||''}</div>
@@ -596,15 +596,14 @@ function generateBR1HTML(job) {
   </div>
   <div style="text-align:center;font-size:14px;font-weight:700;border:2px solid #111;padding:5px 12px;margin:8px 0">ใบประมาณการค่าใช้จ่ายบริการแก้ไขไฟฟ้าขัดข้อง (บร.1)</div>
   <b>ผู้รับบริการ</b>
-  <div style="font-size:12.5px;display:flex;gap:8px;padding:2px 0;border-bottom:1px dotted #ccc; align-items:flex-end;">
-    <span style="min-width:195px;color:#555">1.) ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ :</span>
-    <span style="border-bottom:1px solid #666;flex:1;padding:0 4px; white-space:normal; word-wrap:break-word; word-break:break-all; line-break:anywhere; line-height:1.3; min-width:0;">${job.customer_name||''} ${job.address||''}</span>
-    <span style="white-space:nowrap;">โทร</span>
-    <span style="border-bottom:1px solid #666;min-width:110px;padding:0 4px;white-space:nowrap;">${job.customer_phone||''}</span>
+  <div style="font-size:12.5px; padding:4px 0; border-bottom:1px dotted #ccc; line-height:1.6;">
+    <span style="color:#555;">1.) ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ :</span>
+    <span style="border-bottom:1px solid #666; padding:0 4px; word-wrap:break-word;">${job.customer_name||''} ${job.address||''}</span>
+    <span style="white-space:nowrap; margin-left:8px;">โทร <span style="border-bottom:1px solid #666; display:inline-block; min-width:110px; text-align:center;">${job.customer_phone||''}</span></span>
   </div>
-  <div style="font-size:12.5px;display:flex;gap:8px;padding:2px 0;border-bottom:1px dotted #ccc">
-    <span style="color:#555;min-width:195px">2.) หมายเลขมิเตอร์ PEA. / NO :</span>
-    <span style="border-bottom:1px solid #666;flex:1;padding:0 4px">${job.meter_no||''}</span>
+  <div style="font-size:12.5px; padding:4px 0; border-bottom:1px dotted #ccc; line-height:1.6;">
+    <span style="color:#555;">2.) หมายเลขมิเตอร์ PEA. / NO :</span>
+    <span style="border-bottom:1px solid #666; padding:0 4px; word-wrap:break-word;">${job.meter_no||''}</span>
   </div>
   <div style="font-size:12px;display:flex;gap:5px;flex-wrap:wrap;padding:2px 0;border-bottom:1px dotted #ccc">
     <span>- ใบ บร.1 / เล่มที่</span><span style="border-bottom:1px solid #666;min-width:48px;padding:0 4px">${job.book_no||s.book_no||''}</span>
@@ -734,8 +733,9 @@ function generateMT1HTML(job) {
   <div>ที่ ${s.doc_prefix||'มท 5306.46/นพ.-'}</div>
   <div style="text-align:center;margin:14px 0 12px">${thaiDate(job.date)}</div>
   <div style="display:flex;gap:14px;margin-bottom:4px"><span style="min-width:48px;font-weight:500">เรื่อง</span><span>แจ้งค่าบริการแก้กระแสไฟฟ้าขัดข้อง</span></div>
-  <div style="display:flex;gap:14px;margin-bottom:18px;align-items:flex-end;"><span style="min-width:48px;font-weight:500">เรียน</span>
-    <span style="border-bottom:1px solid #555;flex:1;padding:0 4px; white-space:normal; word-wrap:break-word; word-break:break-all; line-break:anywhere; line-height:1.3; min-width:0;">${job.customer_name||''} ${job.address||''}</span>
+  <div style="margin-bottom:18px; line-height:1.6;">
+    <span style="font-weight:500; margin-right:14px;">เรียน</span>
+    <span style="border-bottom:1px solid #555; padding:0 4px; word-wrap:break-word;">${job.customer_name||''} ${job.address||''}</span>
   </div>
   <div style="text-indent:48px">
     ด้วยในวันที่ <strong>${thaiDate(job.service_date||job.date)}</strong> เวลา <strong>${job.time_start||'...'} น.</strong>
@@ -771,66 +771,6 @@ function generateMT1HTML(job) {
   </div>
 </div>`;
 }
-
-// ── ฟังก์ชันเสริมสำหรับแสดงรายการพัสดุ ──
-window.viewMaterials = async function(id, btn) {
-  const originalText = btn.innerHTML;
-  btn.innerHTML = '<i class="ti ti-loader"></i> โหลด...';
-  btn.disabled = true;
-
-  try {
-    const jobs = await fetchJobs({}); 
-    const job = jobs.find(x => x.id === id);
-    
-    if (!job || !job.job_materials || job.job_materials.length === 0) {
-      showToast('ไม่พบรายการพัสดุในใบงานนี้', 'warning');
-      return;
-    }
-    
-    const tbody = document.getElementById('mat-modal-tbody');
-    tbody.innerHTML = job.job_materials.map((m, i) => `
-      <tr>
-        <td class="tc">${i + 1}</td>
-        <td><span style="font-size:12px;color:#64748b">${m.code}</span></td>
-        <td>${m.name}</td>
-        <td class="tc"><strong>${m.qty}</strong> ${m.unit || 'EA'}</td>
-      </tr>
-    `).join('');
-    
-    document.getElementById('mat-modal-overlay').classList.add('open');
-  } catch (err) {
-    console.error(err);
-    showToast('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
-  } finally {
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-  }
-};
-
-window.closeMatModal = function() {
-  document.getElementById('mat-modal-overlay').classList.remove('open');
-};
-
-// ── ฟังก์ชันเปลี่ยนสถานะการจ่ายเงิน (Admin เท่านั้น) ──
-window.togglePaymentStatus = async function(id, currentStatus, btn) {
-  if (!isAdmin()) return;
-  const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
-  
-  const originalHtml = btn.innerHTML;
-  btn.innerHTML = '<i class="ti ti-loader"></i>...';
-  btn.disabled = true;
-
-  try {
-    await updateJobStatus(id, newStatus);
-    showToast(newStatus === 'paid' ? 'อัพเดทสถานะ: จ่ายแล้ว' : 'อัพเดทสถานะ: ยังไม่จ่าย', 'success');
-    renderHistory();
-  } catch(err) {
-    console.error(err);
-    showToast('เกิดข้อผิดพลาดในการอัพเดทสถานะ', 'error');
-    btn.innerHTML = originalHtml;
-    btn.disabled = false;
-  }
-};
 
 // ── ฟังก์ชันเสริมสำหรับแสดงรายการพัสดุ ──
 window.viewMaterials = async function(id, btn) {
