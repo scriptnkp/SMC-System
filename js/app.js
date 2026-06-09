@@ -14,7 +14,6 @@ function getServiceCalc(start, end, s30) {
   const m = (eh*60+em) - (sh*60+sm);
   
   if (isNaN(m) || m <= 0) return { sv: s30 * 2, blocks: 2 };
-  
   if (m <= 30) return { sv: s30, blocks: 1 };
   
   const extraBlocks = Math.ceil((m - 30) / 30);
@@ -248,7 +247,7 @@ function renderMatTable() {
     <td class="tc"><input type="number" class="field qty-input" value="${r.qty}" min="1" onchange="updateQty(${i},this.value)"></td>
     <td class="tr">${fmt(r.basePrice)}</td>
     <td class="tr"><strong>${fmt(calcUserPrice(r.basePrice)*r.qty)}</strong></td>
-    <td class="tc"><button class="btn-icon danger btn-sm" onclick="removeRow(${i})"><i class="ti ti-trash"></i></button></td>
+    <td class="tc"><button type="button" class="btn-icon danger btn-sm" onclick="removeRow(${i})"><i class="ti ti-trash"></i></button></td>
   </tr>`).join('');
   calcTotals();
 }
@@ -382,9 +381,14 @@ function printDoc() {
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>body{font-family:'Sarabun',sans-serif;font-size:13px;color:#111;margin:24px 40px}
-    table{border-collapse:collapse;width:100%} th,td{border:1px solid #888;padding:4px 6px}
-    th{background:#e0e0e0} @media print{body{margin:0}}</style>
+    <style>
+      body { font-family:'Sarabun',sans-serif; font-size:13px; color:#111; margin:24px 40px; }
+      /* บังคับตารางไม่ให้ล้น และบังคับตัดคำถ้าข้อความยาวเกินไป */
+      table { border-collapse:collapse; width:100%; table-layout:fixed; } 
+      th, td { border:1px solid #888; padding:4px 6px; word-wrap:break-word; word-break:break-word; }
+      th { background:#e0e0e0; } 
+      @media print { body { margin:0; } }
+    </style>
     </head><body>${c}</body></html>`);
   w.document.close(); setTimeout(()=>w.print(),500);
 }
@@ -419,18 +423,18 @@ async function renderHistory() {
         </td>
         <td class="tc hide-mobile">
           ${isAdmin() 
-          ? `<button type="button" class="badge ${j.status === 'paid' ? 'b-success' : 'b-warning'}" style="cursor:pointer; border:none;" onclick="window.togglePaymentStatus('${j.id}', '${j.status || 'unpaid'}', this)">
-          ${j.status === 'paid' ? 'จ่ายแล้ว' : 'ยังไม่จ่าย'}
-          </button>`
-          : `<span class="badge ${j.status === 'paid' ? 'b-success' : 'b-warning'}">
-         ${j.status === 'paid' ? 'จ่ายแล้ว' : 'ยังไม่จ่าย'}
-       </span>`
-  }
-</td>
+            ? `<button type="button" class="badge ${j.status === 'paid' ? 'b-success' : 'b-warning'}" style="cursor:pointer; border:none;" onclick="window.togglePaymentStatus('${j.id}', '${j.status || 'unpaid'}', this)">
+                 ${j.status === 'paid' ? 'จ่ายแล้ว' : 'ยังไม่จ่าย'}
+               </button>`
+            : `<span class="badge ${j.status === 'paid' ? 'b-success' : 'b-warning'}">
+                 ${j.status === 'paid' ? 'จ่ายแล้ว' : 'ยังไม่จ่าย'}
+               </span>`
+          }
+        </td>
         <td><div class="td-actions">
-          ${mine?`<button class="btn-icon btn-sm" onclick="editFromHistory('${j.id}')" title="แก้ไข"><i class="ti ti-edit"></i></button>`:''}
-          <button class="btn-icon btn-sm" onclick="viewFromHistory('${j.id}')" title="ดูเอกสาร"><i class="ti ti-file-text"></i></button>
-          ${mine?`<button class="btn-icon btn-sm danger" onclick="confirmDel('${j.id}')" title="ลบ"><i class="ti ti-trash"></i></button>`:''}
+          ${mine?`<button type="button" class="btn-icon btn-sm" onclick="editFromHistory('${j.id}')" title="แก้ไข"><i class="ti ti-edit"></i></button>`:''}
+          <button type="button" class="btn-icon btn-sm" onclick="viewFromHistory('${j.id}')" title="ดูเอกสาร"><i class="ti ti-file-text"></i></button>
+          ${mine?`<button type="button" class="btn-icon btn-sm danger" onclick="confirmDel('${j.id}')" title="ลบ"><i class="ti ti-trash"></i></button>`:''}
         </div></td>
       </tr>`;
     }).join('');
@@ -555,7 +559,6 @@ function generateBR1HTML(job) {
   const s30 = parseFloat(job.svc_30min||s.service_30min)||285;
   const ms  = job.job_materials||[];
   const mu  = ms.reduce((sum,m)=>sum+parseFloat(m.user_price||0),0);
-  const mh  = mu;
   
   let sv = s30 * 2; 
   if (job.serviceCost) sv = parseFloat(job.serviceCost);
@@ -564,15 +567,20 @@ function generateBR1HTML(job) {
     sv = calc.sv;
   }
 
-  const st2 = sv+mh, tx=st2*.07, gd=sw+st2+tx;
+  const st2 = sv+mu, tx=st2*.07, gd=sw+st2+tx;
   const extraSv = sv > s30 ? sv - s30 : 0;
   
   const wH  = (job.work_type||'high')!=='low', wL=job.work_type==='low'||job.work_type==='both';
 
+  // สั่งบังคับให้คอลัมน์ "ชื่อพัสดุ" ตัดคำลงบรรทัดใหม่
   const rows = ms.map((m,i)=>`<tr>
-    <td>${i+1}</td><td>${m.code}</td><td style="text-align:left">${m.name}</td>
-    <td>${m.qty}</td><td style="text-align:right">${fmt(m.base_price)}</td>
-    <td style="text-align:right"><strong>${fmt(m.user_price)}</strong></td><td></td>
+    <td style="text-align:center">${i+1}</td>
+    <td style="text-align:center">${m.code}</td>
+    <td style="text-align:left; white-space:normal; word-wrap:break-word; word-break:break-word;">${m.name}</td>
+    <td style="text-align:center">${m.qty}</td>
+    <td style="text-align:right">${fmt(m.base_price)}</td>
+    <td style="text-align:right"><strong>${fmt(m.user_price)}</strong></td>
+    <td></td>
   </tr>`).join('');
 
   return `<div style="font-size:13px;color:#111;line-height:1.7">
@@ -588,10 +596,11 @@ function generateBR1HTML(job) {
   </div>
   <div style="text-align:center;font-size:14px;font-weight:700;border:2px solid #111;padding:5px 12px;margin:8px 0">ใบประมาณการค่าใช้จ่ายบริการแก้ไขไฟฟ้าขัดข้อง (บร.1)</div>
   <b>ผู้รับบริการ</b>
-  <div style="font-size:12.5px;display:flex;gap:8px;padding:2px 0;border-bottom:1px dotted #ccc">
+  <div style="font-size:12.5px;display:flex;gap:8px;padding:2px 0;border-bottom:1px dotted #ccc; align-items:flex-end;">
     <span style="min-width:195px;color:#555">1.) ชื่อลูกค้า / สถานที่ผู้ใช้ไฟ :</span>
-    <span style="border-bottom:1px solid #666;flex:1;padding:0 4px">${job.customer_name||''}</span>
-    <span>โทร</span><span style="border-bottom:1px solid #666;min-width:110px;padding:0 4px">${job.customer_phone||''}</span>
+    <span style="border-bottom:1px solid #666;flex:1;padding:0 4px; white-space:normal; word-wrap:break-word; word-break:break-word; line-height:1.3;">${job.customer_name||''}</span>
+    <span style="white-space:nowrap;">โทร</span>
+    <span style="border-bottom:1px solid #666;min-width:110px;padding:0 4px;white-space:nowrap;">${job.customer_phone||''}</span>
   </div>
   <div style="font-size:12.5px;display:flex;gap:8px;padding:2px 0;border-bottom:1px dotted #ccc">
     <span style="color:#555;min-width:195px">2.) หมายเลขมิเตอร์ PEA. / NO :</span>
@@ -634,7 +643,7 @@ function generateBR1HTML(job) {
   <b>รายการพัสดุ</b>
   <div style="font-size:12.5px;font-weight:600;margin:4px 0 2px">ข้อ ข. อุปกรณ์ที่ กฟภ. นำมาใช้ในการแก้ไขกระแสไฟฟ้าขัดข้อง</div>
   <div style="font-size:11.5px;color:#555;margin-bottom:5px">( 1.) ราคาผู้ใช้ไฟ (บวก 40%)</div>
-  <table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0">
+  <table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0;table-layout:fixed;">
     <thead><tr>
       <th style="background:#e0e0e0;border:1px solid #888;padding:5px;width:26px">ที่</th>
       <th style="background:#e0e0e0;border:1px solid #888;padding:5px;width:106px">รหัส</th>
@@ -645,7 +654,7 @@ function generateBR1HTML(job) {
       <th style="background:#e0e0e0;border:1px solid #888;padding:5px;width:56px">หมายเหตุ</th>
     </tr></thead>
     <tbody>
-      ${rows||'<tr><td colspan="7" style="border:1px solid #888;text-align:center;color:#aaa;padding:6px">ไม่มีรายการพัสดุ</td></tr>'}
+      ${rows||'<tr><td colspan=\"7\" style=\"border:1px solid #888;text-align:center;color:#aaa;padding:6px\">ไม่มีรายการพัสดุ</td></tr>'}
       <tr><td colspan="5" style="border:1px solid #888;text-align:right;padding:4px 6px;font-weight:700">รวม</td>
         <td style="border:1px solid #888;text-align:right;padding:4px 6px;font-weight:700">${fmt(mu)}</td>
         <td style="border:1px solid #888"></td></tr>
@@ -725,8 +734,8 @@ function generateMT1HTML(job) {
   <div>ที่ ${s.doc_prefix||'มท 5306.46/นพ.-'}</div>
   <div style="text-align:center;margin:14px 0 12px">${thaiDate(job.date)}</div>
   <div style="display:flex;gap:14px;margin-bottom:4px"><span style="min-width:48px;font-weight:500">เรื่อง</span><span>แจ้งค่าบริการแก้กระแสไฟฟ้าขัดข้อง</span></div>
-  <div style="display:flex;gap:14px;margin-bottom:18px"><span style="min-width:48px;font-weight:500">เรียน</span>
-    <span style="border-bottom:1px solid #555;flex:1;padding:0 4px">${job.customer_name||''}</span>
+  <div style="display:flex;gap:14px;margin-bottom:18px;align-items:flex-end;"><span style="min-width:48px;font-weight:500">เรียน</span>
+    <span style="border-bottom:1px solid #555;flex:1;padding:0 4px; white-space:normal; word-wrap:break-word; word-break:break-word; line-height:1.3;">${job.customer_name||''}</span>
   </div>
   <div style="text-indent:48px">
     ด้วยในวันที่ <strong>${thaiDate(job.service_date||job.date)}</strong> เวลา <strong>${job.time_start||'...'} น.</strong>
@@ -738,7 +747,7 @@ function generateMT1HTML(job) {
     เพื่อเรียกเก็บค่าใช้จ่ายในภายหลังนั้น บัดนี้ การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม
     ได้ตรวจสอบประมาณการแล้วมีค่าใช้จ่าย ดังนี้
   </div>
-  <table style="width:100%;margin:10px 0;font-size:13.5px">
+  <table style="width:100%;margin:10px 0;font-size:13.5px;table-layout:fixed;word-wrap:break-word;">
     ${[['1.) ค่าปลด-สับอุปกรณ์ตัดตอน',fmt(sw)],['2.) ค่าตรวจสอบและแก้ไข + ค่าพัสดุอุปกรณ์',fmt(st2)],
        ['&emsp;-รวมเป็นเงิน (ข้อ 1.+2. )',fmt(sw+st2)],['&emsp;-ภาษี 7 %',fmt(tx)]
     ].map(([l,v])=>`<tr><td style="padding:3px 0">${l}</td><td style="text-align:center;width:78px">เป็นเงิน</td>
@@ -805,7 +814,6 @@ window.closeMatModal = function() {
 // ── ฟังก์ชันเปลี่ยนสถานะการจ่ายเงิน (Admin เท่านั้น) ──
 window.togglePaymentStatus = async function(id, currentStatus, btn) {
   if (!isAdmin()) return;
-  // สลับค่า: ถ้าจ่ายแล้ว -> กลับไปเป็นยังไม่จ่าย, ถ้ายังไม่จ่าย -> เป็นจ่ายแล้ว
   const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
   
   const originalHtml = btn.innerHTML;
@@ -815,7 +823,7 @@ window.togglePaymentStatus = async function(id, currentStatus, btn) {
   try {
     await updateJobStatus(id, newStatus);
     showToast(newStatus === 'paid' ? 'อัพเดทสถานะ: จ่ายแล้ว' : 'อัพเดทสถานะ: ยังไม่จ่าย', 'success');
-    renderHistory(); // โหลดตารางใหม่เพื่อให้ข้อมูลอัปเดตทันที
+    renderHistory();
   } catch(err) {
     console.error(err);
     showToast('เกิดข้อผิดพลาดในการอัพเดทสถานะ', 'error');
